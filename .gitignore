@@ -41,7 +41,6 @@ htmlcov/
 Thumbs.db
 
 # Generated files
-*.html
 *_report.*
 *_analysis.*
 
