@@ -499,14 +499,14 @@
             <!-- Output Panel -->
             <div class="panel">
                 <div class="tabs">
-                    <button class="tab active" onclick="switchTab('overview')">Overview</button>
-                    <button class="tab" onclick="switchTab('security')">Security</button>
-                    <button class="tab" onclick="switchTab('quality')">Quality</button>
-                    <button class="tab" onclick="switchTab('performance')">Performance</button>
-                    <button class="tab" onclick="switchTab('dependencies')">Dependencies</button>
-                    <button class="tab" onclick="switchTab('export')">Export</button>
-                    <button class="tab" onclick="switchTab('cicd')">CI/CD</button>
-                    <button class="tab" onclick="switchTab('tests')">Unit Tests</button>
+                    <button class="tab active" onclick="switchTab('overview', this)">Overview</button>
+                    <button class="tab" onclick="switchTab('security', this)">Security</button>
+                    <button class="tab" onclick="switchTab('quality', this)">Quality</button>
+                    <button class="tab" onclick="switchTab('performance', this)">Performance</button>
+                    <button class="tab" onclick="switchTab('dependencies', this)">Dependencies</button>
+                    <button class="tab" onclick="switchTab('export', this)">Export</button>
+                    <button class="tab" onclick="switchTab('cicd', this)">CI/CD</button>
+                    <button class="tab" onclick="switchTab('tests', this)">Unit Tests</button>
                 </div>
 
                 <div id="overview" class="tab-content active">
@@ -588,10 +588,24 @@
             { name: 'usp_RecordAccountingEntry', desc: '100/100 score - Accounting records' }
         ];
 
-        function switchTab(tabName) {
+        function switchTab(tabName, clickedElement) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            
+            // If called from onclick, use the clicked element; otherwise find the tab button
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            } else {
+                // Find the tab button that corresponds to this tab
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(tab => {
+                    if (tab.textContent.trim().toLowerCase().includes(tabName.toLowerCase()) || 
+                        tab.getAttribute('onclick')?.includes(tabName)) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
+            
             document.getElementById(tabName).classList.add('active');
         }
 
