@@ -42,9 +42,6 @@ Thumbs.db
 
 # Generated files
 *.html
-*.json
-*.csv
-*.dot
 *_report.*
 *_analysis.*
 
@@ -59,3 +56,4 @@ Thumbs.db
 antlr-*.jar
 grammar/*.tokens
 grammar/*.interp
+.vercel
