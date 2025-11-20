@@ -970,44 +970,137 @@
         }
 
         function generateTestsClientSide(procName, parameters) {
-            const testClass = `Test${procName.replace(/\./g, '_').replace(/[\[\]]/g, '')}`;
+            // Clean procedure name - remove brackets, handle schema properly
+            const cleanProcName = procName.replace(/[\[\]]/g, '');
+            const testClass = `Test${cleanProcName.replace(/\./g, '_')}`;
             const tests = [];
+            
+            tests.push(`-- ===========================================`);
+            tests.push(`-- tSQLt Unit Tests for ${cleanProcName}`);
+            tests.push(`-- Generated automatically`);
+            tests.push(`-- ===========================================\n`);
             
             tests.push(`EXEC tSQLt.NewTestClass '${testClass}';`);
             tests.push('GO\n');
             
-            // Test 1: Basic execution
-            tests.push(`CREATE PROCEDURE [${testClass}].[test_BasicExecution]`);
+            // Test 1: Basic execution with valid parameters
+            tests.push(`CREATE PROCEDURE [${testClass}].[test_BasicExecution_WithValidParams]`);
             tests.push('AS');
             tests.push('BEGIN');
             tests.push('    -- Arrange');
-            tests.push('    -- Act');
-            
             if (parameters && parameters.length > 0) {
-                const paramValues = parameters.map(p => getDefaultValue(p)).join(', ');
-                tests.push(`    EXEC ${procName} ${paramValues};`);
-            } else {
-                tests.push(`    EXEC ${procName};`);
+                parameters.forEach((p, idx) => {
+                    tests.push(`    DECLARE ${p.name} ${p.type} = ${getDefaultValue(p)};`);
+                });
             }
-            
+            tests.push('    ');
+            tests.push('    -- Act');
+            if (parameters && parameters.length > 0) {
+                const paramList = parameters.map(p => `${p.name} = ${p.name}`).join(', ');
+                tests.push(`    EXEC ${cleanProcName} ${paramList};`);
+            } else {
+                tests.push(`    EXEC ${cleanProcName};`);
+            }
+            tests.push('    ');
             tests.push('    -- Assert');
-            tests.push('    -- Add assertions here');
+            tests.push('    -- Verify procedure executed without errors');
+            tests.push('    IF @@ERROR <> 0');
+            tests.push("        EXEC tSQLt.Fail 'Procedure execution failed';");
             tests.push('END;');
             tests.push('GO\n');
             
-            // Test 2: NULL parameters (if any)
+            // Test 2: NULL parameters handling (if parameters exist)
             if (parameters && parameters.length > 0) {
-                tests.push(`CREATE PROCEDURE [${testClass}].[test_NullParameters]`);
+                tests.push(`CREATE PROCEDURE [${testClass}].[test_NullParameters_Handling]`);
                 tests.push('AS');
                 tests.push('BEGIN');
-                tests.push('    -- Test with NULL parameters');
-                const nullParams = parameters.map(() => 'NULL').join(', ');
-                tests.push(`    EXEC ${procName} ${nullParams};`);
+                tests.push('    -- Arrange');
+                tests.push('    -- Test with NULL parameters to verify null handling');
+                tests.push('    ');
+                tests.push('    -- Act');
+                const nullParams = parameters.map(p => `${p.name} = NULL`).join(', ');
+                tests.push(`    EXEC ${cleanProcName} ${nullParams};`);
+                tests.push('    ');
+                tests.push('    -- Assert');
+                tests.push('    -- Verify procedure handles NULL gracefully');
+                tests.push('    IF @@ERROR <> 0');
+                tests.push("        EXEC tSQLt.Fail 'Procedure failed with NULL parameters';");
                 tests.push('END;');
                 tests.push('GO\n');
             }
             
+            // Test 3: Boundary values (if parameters exist)
+            if (parameters && parameters.length > 0) {
+                tests.push(`CREATE PROCEDURE [${testClass}].[test_BoundaryValues]`);
+                tests.push('AS');
+                tests.push('BEGIN');
+                tests.push('    -- Arrange');
+                tests.push('    -- Test with boundary/edge case values');
+                parameters.forEach((p, idx) => {
+                    const boundaryValue = getBoundaryValue(p);
+                    tests.push(`    DECLARE ${p.name} ${p.type} = ${boundaryValue};`);
+                });
+                tests.push('    ');
+                tests.push('    -- Act');
+                const paramList = parameters.map(p => `${p.name} = ${p.name}`).join(', ');
+                tests.push(`    EXEC ${cleanProcName} ${paramList};`);
+                tests.push('    ');
+                tests.push('    -- Assert');
+                tests.push('    IF @@ERROR <> 0');
+                tests.push("        EXEC tSQLt.Fail 'Procedure failed with boundary values';");
+                tests.push('END;');
+                tests.push('GO\n');
+            }
+            
+            // Test 4: Return value check (if procedure returns a value)
+            tests.push(`CREATE PROCEDURE [${testClass}].[test_ReturnValue]`);
+            tests.push('AS');
+            tests.push('BEGIN');
+            tests.push('    -- Arrange');
+            if (parameters && parameters.length > 0) {
+                parameters.forEach((p, idx) => {
+                    tests.push(`    DECLARE ${p.name} ${p.type} = ${getDefaultValue(p)};`);
+                });
+            }
+            tests.push('    DECLARE @ReturnValue INT;');
+            tests.push('    ');
+            tests.push('    -- Act');
+            if (parameters && parameters.length > 0) {
+                const paramList = parameters.map(p => `${p.name} = ${p.name}`).join(', ');
+                tests.push(`    EXEC @ReturnValue = ${cleanProcName} ${paramList};`);
+            } else {
+                tests.push(`    EXEC @ReturnValue = ${cleanProcName};`);
+            }
+            tests.push('    ');
+            tests.push('    -- Assert');
+            tests.push('    -- Verify return value is valid (adjust based on your procedure logic)');
+            tests.push('    -- IF @ReturnValue < 0');
+            tests.push("    --     EXEC tSQLt.Fail 'Procedure returned error code: ', @ReturnValue;");
+            tests.push('END;');
+            tests.push('GO\n');
+            
             return tests.join('\n');
+        }
+        
+        function getBoundaryValue(param) {
+            const paramType = (param.type || 'VARCHAR').toUpperCase().trim();
+            const baseType = paramType.split('(')[0].trim();
+            
+            if (['INT', 'INTEGER', 'BIGINT'].includes(baseType)) {
+                return '2147483647'; // Max INT value
+            } else if (baseType === 'SMALLINT') {
+                return '32767';
+            } else if (baseType === 'TINYINT') {
+                return '255';
+            } else if (['VARCHAR', 'CHAR', 'NVARCHAR', 'NCHAR'].includes(baseType)) {
+                return "''"; // Empty string
+            } else if (['DATE', 'DATETIME', 'DATETIME2'].includes(baseType)) {
+                return "'1900-01-01'"; // Min date
+            } else if (baseType === 'BIT') {
+                return '0';
+            } else {
+                return 'NULL';
+            }
         }
 
         function getDefaultValue(param) {
