@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>T-SQL Analyzer API</title>
+    <title>T-SQL Analyzer - Interactive Analysis</title>
     <style>
         * {
             margin: 0;
@@ -13,193 +13,412 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
 
         .container {
+            max-width: 1400px;
+            margin: 0 auto;
             background: white;
-            padding: 50px;
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
-            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
         }
 
         h1 {
-            color: #667eea;
             font-size: 2.5rem;
             margin-bottom: 10px;
         }
 
         .subtitle {
-            color: #666;
             font-size: 1.1rem;
-            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .input-section {
+            padding: 30px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .output-section {
+            padding: 30px;
+            background: #f9f9f9;
         }
 
         h2 {
             color: #333;
-            font-size: 1.5rem;
-            margin-top: 30px;
             margin-bottom: 15px;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 5px;
+            font-size: 1.3rem;
         }
 
-        code {
-            background: #f4f4f4;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-family: 'Courier New', Consolas, Monaco, monospace;
-            font-size: 0.9em;
+        textarea {
+            width: 100%;
+            height: 400px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
         }
 
-        pre {
-            background: #2d2d2d;
-            color: #f8f8f2;
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .metric-card {
+            background: white;
             padding: 20px;
             border-radius: 8px;
-            overflow-x: auto;
-            margin: 15px 0;
-            line-height: 1.6;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        pre code {
-            background: none;
-            padding: 0;
-            color: inherit;
+        .metric-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
         }
 
-        .endpoint {
-            color: #98c379;
-        }
-
-        .method {
-            color: #e5c07b;
+        .metric-value {
+            font-size: 2rem;
             font-weight: bold;
+            color: #667eea;
         }
 
-        .features {
-            background: #f9f9f9;
+        .section {
+            background: white;
             padding: 20px;
             border-radius: 8px;
-            margin: 20px 0;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .features ul {
-            list-style: none;
-            padding-left: 0;
+        .section h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
         }
 
-        .features li {
+        .info-item {
             padding: 8px 0;
-            padding-left: 20px;
-            position: relative;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .features li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #667eea;
-            font-weight: bold;
+        .info-item:last-child {
+            border-bottom: none;
         }
 
-        .links {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .status {
-            background: #e8f5e9;
-            color: #2e7d32;
-            padding: 10px 15px;
-            border-radius: 6px;
+        .info-label {
+            font-weight: 600;
+            color: #555;
             display: inline-block;
-            margin-bottom: 20px;
-            font-weight: 500;
+            width: 120px;
+        }
+
+        .issue {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+        }
+
+        .issue-high {
+            background: #fff5f5;
+            border-left-color: #f56565;
+        }
+
+        .issue-medium {
+            background: #fffaf0;
+            border-left-color: #ed8936;
+        }
+
+        .issue-low {
+            background: #f0fff4;
+            border-left-color: #48bb78;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .error {
+            background: #fff5f5;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f56565;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-high {
+            background: #f56565;
+            color: white;
+        }
+
+        .badge-medium {
+            background: #ed8936;
+            color: white;
+        }
+
+        .badge-low {
+            background: #48bb78;
+            color: white;
+        }
+
+        @media (max-width: 1024px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+
+            .input-section {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div class="status">API Status: Online</div>
-
-        <h1>T-SQL Analyzer API</h1>
-        <p class="subtitle">World-class stored procedure analysis with Security, Quality, and Performance scoring</p>
-
-        <h2>API Endpoint</h2>
-        <p><span class="method">POST</span> <code class="endpoint">/api/analyze</code></p>
-
-        <h3>Request Example</h3>
-        <pre><code>{
-  "sql": "CREATE PROCEDURE dbo.GetUsers AS BEGIN SELECT * FROM Users; END"
-}</code></pre>
-
-        <h3>Test with cURL</h3>
-        <pre><code>curl -X POST https://sp-analyser-testing-suite.vercel.app/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"sql":"CREATE PROCEDURE dbo.Test AS BEGIN SELECT 1; END"}'</code></pre>
-
-        <h3>Response Format</h3>
-        <pre><code>{
-  "success": true,
-  "procedure_name": "dbo.GetUsers",
-  "parameters": [],
-  "tables": ["Users"],
-  "security": {
-    "score": 98,
-    "analysis": { ... }
-  },
-  "quality": {
-    "score": 85,
-    "grade": "B",
-    "issues": []
-  },
-  "performance": {
-    "score": 100,
-    "grade": "A",
-    "issues": []
-  }
-}</code></pre>
-
-        <div class="features">
-            <h2>Features</h2>
-            <ul>
-                <li>Security Analysis - SQL injection detection</li>
-                <li>Code Quality Grading - A through F scale</li>
-                <li>Performance Anti-pattern Detection</li>
-                <li>Dependency Extraction - tables and procedures</li>
-                <li>Parameter Analysis with types and defaults</li>
-                <li>101/107 tests passing (94% coverage)</li>
-            </ul>
+        <div class="header">
+            <h1>T-SQL Analyzer</h1>
+            <p class="subtitle">Paste your stored procedure code and get instant security, quality, and performance
+                analysis</p>
         </div>
 
-        <div class="links">
-            <p>
-                <a href="https://github.com/codebydaksh/SP-Analyser-Testing-Suite" target="_blank">View on GitHub</a> |
-                <a href="/api/analyze">API Documentation</a>
-            </p>
+        <div class="main">
+            <div class="input-section">
+                <h2>SQL Code Input</h2>
+                <textarea id="sqlInput" placeholder="Paste your stored procedure code here...
+
+Example:
+CREATE PROCEDURE dbo.GetUsers
+    @UserId INT
+AS
+BEGIN
+    SELECT * FROM Users WHERE UserId = @UserId;
+END"></textarea>
+                <button class="button" id="analyzeBtn" onclick="analyzeSP()">Analyze Stored Procedure</button>
+            </div>
+
+            <div class="output-section">
+                <h2>Analysis Results</h2>
+                <div id="output">
+                    <p style="color: #999; text-align: center; padding: 40px;">Results will appear here after
+                        analysis...</p>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script>
+        async function analyzeSP() {
+            const sqlInput = document.getElementById('sqlInput').value;
+            const output = document.getElementById('output');
+            const btn = document.getElementById('analyzeBtn');
+
+            if (!sqlInput.trim()) {
+                output.innerHTML = '<div class="error">Please enter some SQL code to analyze.</div>';
+                return;
+            }
+
+            // Show loading
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+            output.innerHTML = '<div class="loading">Analyzing your stored procedure...</div>';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ sql: sqlInput })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                output.innerHTML = `<div class="error"><strong>Error:</strong> ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Analyze Stored Procedure';
+            }
+        }
+
+        function displayResults(data) {
+            const output = document.getElementById('output');
+
+            let html = `
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-label">Security Score</div>
+                        <div class="metric-value">${data.security.score}/100</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Quality Grade</div>
+                        <div class="metric-value">${data.quality.grade}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Performance</div>
+                        <div class="metric-value">${data.performance.grade}</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Procedure Information</h3>
+                    <div class="info-item">
+                        <span class="info-label">Name:</span>
+                        <code>${data.procedure_name}</code>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Parameters:</span>
+                        ${data.parameters.length > 0 ? data.parameters.map(p => `<code>${p.name} ${p.type}</code>`).join(', ') : 'None'}
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tables:</span>
+                        ${data.tables.length > 0 ? data.tables.map(t => `<code>${t}</code>`).join(', ') : 'None'}
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Lines of Code:</span>
+                        ${data.lines_of_code}
+                    </div>
+                </div>
+            `;
+
+            // Security Issues
+            const securityIssues = data.security.analysis.sql_injection_risks || [];
+            if (securityIssues.length > 0) {
+                html += `
+                    <div class="section">
+                        <h3>Security Issues</h3>
+                        ${securityIssues.map(issue => `
+                            <div class="issue issue-${issue.severity.toLowerCase()}">
+                                <strong>${issue.type}</strong>
+                                <span class="badge badge-${issue.severity.toLowerCase()}">${issue.severity}</span>
+                                <p>${issue.message}</p>
+                                <p style="margin-top: 8px;"><strong>Recommendation:</strong> ${issue.recommendation}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Quality Issues
+            if (data.quality.issues && data.quality.issues.length > 0) {
+                html += `
+                    <div class="section">
+                        <h3>Quality Issues</h3>
+                        ${data.quality.issues.map(issue => `
+                            <div class="issue issue-${issue.severity.toLowerCase()}">
+                                <strong>${issue.category}</strong>
+                                <span class="badge badge-${issue.severity.toLowerCase()}">${issue.severity}</span>
+                                <p>${issue.message}</p>
+                                <p style="margin-top: 8px;"><strong>Recommendation:</strong> ${issue.recommendation}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Performance Issues
+            if (data.performance.issues && data.performance.issues.length > 0) {
+                html += `
+                    <div class="section">
+                        <h3>Performance Issues</h3>
+                        ${data.performance.issues.map(issue => `
+                            <div class="issue issue-${issue.severity.toLowerCase()}">
+                                <strong>${issue.issue}</strong>
+                                <span class="badge badge-${issue.severity.toLowerCase()}">${issue.severity}</span>
+                                <p><strong>Impact:</strong> ${issue.impact}</p>
+                                <p style="margin-top: 8px;"><strong>Recommendation:</strong> ${issue.recommendation}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            output.innerHTML = html;
+        }
+    </script>
 </body>
 
 </html>
