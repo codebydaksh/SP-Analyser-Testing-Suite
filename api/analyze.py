@@ -232,6 +232,9 @@ class handler(BaseHTTPRequestHandler):
         # Extract procedure name - try multiple patterns for robustness
         procedure_name = 'Unknown'
         
+        # Debug: Log SQL preview
+        sql_preview = sql_code[:200] if len(sql_code) > 200 else sql_code
+        
         # Pattern 1: Handle [schema].[name], schema.name, or just name (with optional brackets)
         # Matches: [dbo].[usp_ProcessOrder], dbo.usp_ProcessOrder, usp_ProcessOrder, [usp_ProcessOrder]
         proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)', sql_code, re.IGNORECASE)
@@ -250,14 +253,26 @@ class handler(BaseHTTPRequestHandler):
             if proc_match:
                 procedure_name = proc_match.group(1).strip('[]').strip()
         
-        # If still unknown, return error
+        # Pattern 4: Most flexible - any word after PROCEDURE
+        if procedure_name == 'Unknown':
+            proc_match = re.search(r'PROC(?:EDURE)?\s+([^\s]+)', sql_code, re.IGNORECASE)
+            if proc_match:
+                procedure_name = proc_match.group(1).strip('[]').strip()
+        
+        # If still unknown, return error with debugging info
         if procedure_name == 'Unknown':
             return {
                 'success': False,
-                'error': 'Could not extract procedure name from SQL. Please ensure the SQL contains a valid CREATE PROCEDURE statement.',
+                'error': f'Could not extract procedure name from SQL. SQL preview: {sql_preview}... Please ensure the SQL contains a valid CREATE PROCEDURE statement.',
                 'procedure_name': 'Unknown',
                 'format': format_type,
-                'tests': None
+                'tests': None,
+                'debug': {
+                    'sql_length': len(sql_code),
+                    'sql_preview': sql_preview,
+                    'has_create': 'CREATE' in sql_code.upper(),
+                    'has_procedure': 'PROCEDURE' in sql_code.upper() or 'PROC' in sql_code.upper()
+                }
             }
         
         # Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)

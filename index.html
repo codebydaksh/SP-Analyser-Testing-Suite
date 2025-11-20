@@ -858,25 +858,41 @@
                 params = currentResults.parameters || [];
             } else {
                 // Parse SQL directly with more robust patterns
-                // Handle: CREATE PROCEDURE [schema].[name], CREATE PROCEDURE schema.name, CREATE PROCEDURE name
-                let procMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)/i);
+                console.log('Parsing SQL for procedure name. SQL length:', sql.length);
+                console.log('SQL preview (first 200 chars):', sql.substring(0, 200));
+                
+                // Try multiple patterns in order of specificity
+                let procMatch = null;
+                
+                // Pattern 1: Full format with schema and brackets
+                procMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)/i);
                 if (procMatch) {
+                    console.log('Pattern 1 matched:', procMatch[1]);
                     procName = procMatch[1].replace(/[\[\]]/g, '').trim();
                 } else {
-                    // Fallback: simpler pattern
+                    // Pattern 2: Any non-whitespace after CREATE PROCEDURE
                     procMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+([^\s]+)/i);
                     if (procMatch) {
+                        console.log('Pattern 2 matched:', procMatch[1]);
                         procName = procMatch[1].replace(/[\[\]]/g, '').trim();
+                    } else {
+                        // Pattern 3: Just PROCEDURE keyword
+                        procMatch = sql.match(/PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)/i);
+                        if (procMatch) {
+                            console.log('Pattern 3 matched:', procMatch[1]);
+                            procName = procMatch[1].replace(/[\[\]]/g, '').trim();
+                        } else {
+                            // Pattern 4: Most flexible - any word after PROCEDURE
+                            procMatch = sql.match(/PROC(?:EDURE)?\s+([^\s]+)/i);
+                            if (procMatch) {
+                                console.log('Pattern 4 matched:', procMatch[1]);
+                                procName = procMatch[1].replace(/[\[\]]/g, '').trim();
+                            }
+                        }
                     }
                 }
                 
-                // If still no name found, try even more flexible pattern
-                if (!procName || procName === 'Unknown') {
-                    const flexibleMatch = sql.match(/PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)/i);
-                    if (flexibleMatch) {
-                        procName = flexibleMatch[1].replace(/[\[\]]/g, '').trim();
-                    }
-                }
+                console.log('Final extracted procedure name:', procName);
                 
                 // Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)
                 const signatureMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+[^\s]+\s*(.*?)\s+AS\b/is);
@@ -901,12 +917,18 @@
                 }
             }
             
-            // If we STILL don't have a procedure name, show error
+            // If we STILL don't have a procedure name, show error with debugging info
             if (!procName || procName === 'Unknown') {
+                const sqlPreview = sql.substring(0, 300).replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 testOutput.innerHTML = `<div class="empty-state" style="color: #dc2626;">
                     <strong>Error:</strong> Could not extract procedure name from SQL.<br><br>
                     <strong>Solution:</strong> Click "Analyze" first, then click "Generate Tests" again.<br>
-                    This ensures accurate procedure name and parameter extraction.
+                    This ensures accurate procedure name and parameter extraction.<br><br>
+                    <strong>Debug Info:</strong><br>
+                    <small style="font-family: monospace; background: #f5f5f5; padding: 8px; display: block; margin-top: 8px; border-radius: 4px;">
+                        SQL Preview (first 300 chars):<br>${sqlPreview}...
+                    </small><br>
+                    <small>Check browser console (F12) for detailed extraction attempts.</small>
                 </div>`;
                 switchTab('tests');
                 return;
