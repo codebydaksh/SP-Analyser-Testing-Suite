@@ -227,9 +227,35 @@ class handler(BaseHTTPRequestHandler):
     
     def generate_tests(self, sql_code: str, format_type: str = 'tsqlt') -> dict:
         """Generate unit tests for the stored procedure."""
-        # Extract procedure name - handle OR ALTER, schemas, brackets
-        proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w\.\]]+\]?)', sql_code, re.IGNORECASE)
-        procedure_name = proc_match.group(1).strip('[]') if proc_match else 'Unknown'
+        # Extract procedure name - try multiple patterns for robustness
+        procedure_name = 'Unknown'
+        
+        # Pattern 1: Standard CREATE PROCEDURE with optional brackets
+        proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[^\s\[\]]+\]?)', sql_code, re.IGNORECASE)
+        if proc_match:
+            procedure_name = proc_match.group(1).strip('[]').strip()
+        
+        # Pattern 2: Fallback - any PROCEDURE keyword followed by identifier
+        if procedure_name == 'Unknown':
+            proc_match = re.search(r'PROC(?:EDURE)?\s+([a-zA-Z_][\w\.]*)', sql_code, re.IGNORECASE)
+            if proc_match:
+                procedure_name = proc_match.group(1).strip()
+        
+        # Pattern 3: Last resort - find any identifier after CREATE
+        if procedure_name == 'Unknown':
+            proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+([a-zA-Z_][\w\.]*)', sql_code, re.IGNORECASE)
+            if proc_match:
+                procedure_name = proc_match.group(1).strip()
+        
+        # If still unknown, return error
+        if procedure_name == 'Unknown':
+            return {
+                'success': False,
+                'error': 'Could not extract procedure name from SQL. Please ensure the SQL contains a valid CREATE PROCEDURE statement.',
+                'procedure_name': 'Unknown',
+                'format': format_type,
+                'tests': None
+            }
         
         # Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)
         params = []
