@@ -858,24 +858,23 @@
                 params = currentResults.parameters || [];
             } else {
                 // Parse SQL directly with more robust patterns
-                // Try multiple patterns to catch different formats
-                let procMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[^\s\[\]]+\]?)/i);
-                if (!procMatch) {
-                    procMatch = sql.match(/CREATE\s+PROC(?:EDURE)?\s+(\S+)/i);
-                }
-                if (!procMatch) {
-                    procMatch = sql.match(/PROC(?:EDURE)?\s+(\[?[\w\.]+\]?)/i);
-                }
-                
+                // Handle: CREATE PROCEDURE [schema].[name], CREATE PROCEDURE schema.name, CREATE PROCEDURE name
+                let procMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)/i);
                 if (procMatch) {
                     procName = procMatch[1].replace(/[\[\]]/g, '').trim();
+                } else {
+                    // Fallback: simpler pattern
+                    procMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+([^\s]+)/i);
+                    if (procMatch) {
+                        procName = procMatch[1].replace(/[\[\]]/g, '').trim();
+                    }
                 }
                 
-                // If still no name found, try to extract from any procedure-like pattern
+                // If still no name found, try even more flexible pattern
                 if (!procName || procName === 'Unknown') {
-                    const anyProcMatch = sql.match(/(?:CREATE|ALTER)\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+([a-zA-Z_][\w\.]*)/i);
-                    if (anyProcMatch) {
-                        procName = anyProcMatch[1];
+                    const flexibleMatch = sql.match(/PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)/i);
+                    if (flexibleMatch) {
+                        procName = flexibleMatch[1].replace(/[\[\]]/g, '').trim();
                     }
                 }
                 

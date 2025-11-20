@@ -230,22 +230,23 @@ class handler(BaseHTTPRequestHandler):
         # Extract procedure name - try multiple patterns for robustness
         procedure_name = 'Unknown'
         
-        # Pattern 1: Standard CREATE PROCEDURE with optional brackets
-        proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[^\s\[\]]+\]?)', sql_code, re.IGNORECASE)
+        # Pattern 1: Handle [schema].[name], schema.name, or just name (with optional brackets)
+        # Matches: [dbo].[usp_ProcessOrder], dbo.usp_ProcessOrder, usp_ProcessOrder, [usp_ProcessOrder]
+        proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)', sql_code, re.IGNORECASE)
         if proc_match:
             procedure_name = proc_match.group(1).strip('[]').strip()
         
-        # Pattern 2: Fallback - any PROCEDURE keyword followed by identifier
+        # Pattern 2: Fallback - any non-whitespace after CREATE PROCEDURE
         if procedure_name == 'Unknown':
-            proc_match = re.search(r'PROC(?:EDURE)?\s+([a-zA-Z_][\w\.]*)', sql_code, re.IGNORECASE)
+            proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+([^\s]+)', sql_code, re.IGNORECASE)
             if proc_match:
-                procedure_name = proc_match.group(1).strip()
+                procedure_name = proc_match.group(1).strip('[]').strip()
         
-        # Pattern 3: Last resort - find any identifier after CREATE
+        # Pattern 3: Last resort - any PROCEDURE keyword followed by identifier
         if procedure_name == 'Unknown':
-            proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+([a-zA-Z_][\w\.]*)', sql_code, re.IGNORECASE)
+            proc_match = re.search(r'PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)', sql_code, re.IGNORECASE)
             if proc_match:
-                procedure_name = proc_match.group(1).strip()
+                procedure_name = proc_match.group(1).strip('[]').strip()
         
         # If still unknown, return error
         if procedure_name == 'Unknown':
