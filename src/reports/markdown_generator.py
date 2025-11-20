@@ -51,7 +51,7 @@ class MarkdownReportGenerator:
         # Quality Issues
         quality = analysis_data.get('quality', {})
         if quality.get('issues'):
-            lines.append("## ⭐ Code Quality Issues\n")
+            lines.append("## Code Quality Issues\n")
             for issue in quality.get('issues'):
                 lines.append(f"### {issue['category']} [{issue['severity']}]")
                 lines.append(f"> {issue['message']}")

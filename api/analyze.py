@@ -40,7 +40,7 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(info, indent=2).encode())
     
     def do_POST(self):
-        """Handle POST requests to analyze SQL code."""
+        """Handle POST requests to analyze SQL code or generate tests."""
         try:
             content_length = int(self.headers.get('Content-Length', 0))
             if content_length == 0:
@@ -51,6 +51,7 @@ class handler(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
             
             sql_code = data.get('sql', '')
+            action = data.get('action', 'analyze')
             
             if not sql_code:
                 self.send_response(400)
@@ -60,8 +61,12 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'No SQL code provided in "sql" field'}).encode())
                 return
             
-            # Perform basic analysis
-            result = self.analyze_sql(sql_code)
+            # Check if this is a test generation request
+            if action == 'generate-tests' or self.path == '/api/generate-tests':
+                result = self.generate_tests(sql_code, data.get('format', 'tsqlt'))
+            else:
+                # Perform basic analysis
+                result = self.analyze_sql(sql_code)
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -211,3 +216,103 @@ class handler(BaseHTTPRequestHandler):
                 'issues': perf_issues
             }
         }
+    
+    def generate_tests(self, sql_code: str, format_type: str = 'tsqlt') -> dict:
+        """Generate unit tests for the stored procedure."""
+        # Extract procedure name
+        proc_match = re.search(r'CREATE\s+PROC(?:EDURE)?\s+(\[?[\w\.\]]+)', sql_code, re.IGNORECASE)
+        procedure_name = proc_match.group(1) if proc_match else 'Unknown'
+        
+        # Extract parameters (same logic as analyze_sql)
+        params = []
+        param_pattern = r'@(\w+)\s+(\w+(?:\(\d+(?:,\d+)?\))?)'
+        for match in re.finditer(param_pattern, sql_code):
+            params.append({
+                'name': f'@{match.group(1)}',
+                'type': match.group(2)
+            })
+        
+        # Generate tests based on format
+        if format_type == 'ssdt':
+            tests = self._generate_ssdt_tests(procedure_name, params)
+        else:
+            tests = self._generate_tsqlt_tests(procedure_name, params)
+        
+        return {
+            'success': True,
+            'procedure_name': procedure_name,
+            'format': format_type,
+            'tests': tests
+        }
+    
+    def _generate_tsqlt_tests(self, proc_name: str, parameters: list) -> str:
+        """Generate tSQLt test suite."""
+        test_class = f"Test{proc_name.replace('.', '_').replace('[', '').replace(']', '')}"
+        
+        tests = []
+        tests.append(f"EXEC tSQLt.NewTestClass '{test_class}';")
+        tests.append("GO\n")
+        
+        # Test 1: Basic execution
+        tests.append(f"CREATE PROCEDURE [{test_class}].[test_BasicExecution]")
+        tests.append("AS")
+        tests.append("BEGIN")
+        tests.append("    -- Arrange")
+        tests.append("    -- Act")
+        if parameters:
+            param_values = ", ".join([self._get_default_value(p) for p in parameters])
+            tests.append(f"    EXEC {proc_name} {param_values};")
+        else:
+            tests.append(f"    EXEC {proc_name};")
+        tests.append("    -- Assert")
+        tests.append("    -- Add assertions here")
+        tests.append("END;")
+        tests.append("GO\n")
+        
+        # Test 2: NULL parameters (if any)
+        if parameters:
+            tests.append(f"CREATE PROCEDURE [{test_class}].[test_NullParameters]")
+            tests.append("AS")
+            tests.append("BEGIN")
+            tests.append("    -- Test with NULL parameters")
+            null_params = ", ".join(["NULL" for _ in parameters])
+            tests.append(f"    EXEC {proc_name} {null_params};")
+            tests.append("END;")
+            tests.append("GO\n")
+        
+        return "\n".join(tests)
+    
+    def _generate_ssdt_tests(self, proc_name: str, parameters: list) -> str:
+        """Generate SSDT-compatible test suite."""
+        tests = []
+        tests.append(f"-- SSDT Test Suite for {proc_name}")
+        tests.append(f"-- Run with: SqlCmd or SSDT Test Runner\n")
+        
+        tests.append(f"-- Test: Basic Execution")
+        tests.append(f"DECLARE @result INT;")
+        if parameters:
+            param_values = ", ".join([self._get_default_value(p) for p in parameters])
+            tests.append(f"EXEC @result = {proc_name} {param_values};")
+        else:
+            tests.append(f"EXEC @result = {proc_name};")
+        tests.append(f"IF @result <> 0 THROW 50000, 'Test failed: Basic execution', 1;")
+        tests.append(f"PRINT 'PASS: Basic execution';\n")
+        
+        return "\n".join(tests)
+    
+    def _get_default_value(self, param: dict) -> str:
+        """Get a default test value for a parameter based on its type."""
+        param_type = param.get('type', 'VARCHAR').upper()
+        
+        if 'INT' in param_type or 'NUMERIC' in param_type or 'DECIMAL' in param_type or 'BIGINT' in param_type or 'SMALLINT' in param_type or 'TINYINT' in param_type:
+            return "1"
+        elif 'VARCHAR' in param_type or 'CHAR' in param_type or 'TEXT' in param_type or 'NVARCHAR' in param_type or 'NCHAR' in param_type:
+            return "'test'"
+        elif 'DATE' in param_type or 'TIME' in param_type or 'DATETIME' in param_type:
+            return "'2024-01-01'"
+        elif 'BIT' in param_type:
+            return "1"
+        elif 'FLOAT' in param_type or 'REAL' in param_type or 'MONEY' in param_type:
+            return "1.0"
+        else:
+            return "'default'"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 SQL Server Stored Procedure Analysis & Testing Suite
-🏆 WORLD-CLASS ENTERPRISE EDITION
+WORLD-CLASS ENTERPRISE EDITION
 Complete analysis with security, quality, performance insights
 """
 import argparse
@@ -124,7 +124,7 @@ def analyze_command(args):
                 html_file = filepath.replace('.sql', '_report.html')
                 with open(html_file, 'w', encoding='utf-8') as f:
                     f.write(html_content)
-                print(f"\n✅ HTML report: {html_file}")
+                print(f"\nHTML report: {html_file}")
             
             if args.markdown:
                 md_gen = MarkdownReportGenerator()
@@ -132,13 +132,13 @@ def analyze_command(args):
                 md_file = filepath.replace('.sql', '_report.md')
                 with open(md_file, 'w', encoding='utf-8') as f:
                     f.write(md_content)
-                print(f"✅ Markdown report: {md_file}")
+                print(f"Markdown report: {md_file}")
             
             if args.json:
                 json_file = filepath.replace('.sql', '_analysis.json')
                 with open(json_file, 'w', encoding='utf-8') as f:
                     json.dump(result, f, indent=2, default=str)
-                print(f"✅ JSON report: {json_file}")
+                print(f"JSON report: {json_file}")
             
             if args.visualize:
                 builder = CFGBuilder()
@@ -148,12 +148,7 @@ def analyze_command(args):
                 viz.save_dot(cfg, dot_file)
         
         except Exception as e:
-            print(f"❌ Error analyzing {filepath}: {e}")
-            if args.strict:
-                return 1
-        
-        except Exception as e:
-            print(f"❌ Error analyzing {filepath}: {e}")
+            print(f"Error analyzing {filepath}: {e}")
             if args.strict:
                 return 1
     
@@ -165,26 +160,26 @@ def analyze_command(args):
         if args.csv:
             csv_gen = CSVSummaryGenerator()
             csv_gen.generate(results, args.csv)
-            print(f"\n✅ CSV summary: {args.csv}")
+            print(f"\nCSV summary: {args.csv}")
     
     # CI/CD integration - exit code based on thresholds
     if args.fail_on_quality and any(r['quality']['quality_score'] < args.min_quality for r in results):
-        print(f"\n❌ Quality threshold not met (minimum: {args.min_quality})")
+        print(f"\nQuality threshold not met (minimum: {args.min_quality})")
         return 1
     
     if args.fail_on_security and any(r['security']['score'] < args.min_security for r in results):
-        print(f"\n❌ Security threshold not met (minimum: {args.min_security})")
+        print(f"\nSecurity threshold not met (minimum: {args.min_security})")
         return 1
     
     return 0
 
 def print_analysis_summary(result: dict):
     """Print concise analysis summary."""
-    print("\n🔍 ANALYSIS SUMMARY")
+    print("\nANALYSIS SUMMARY")
     print(f"  Procedure: {result['sp_name']}")
     print(f"  Lines of Code: {result['basic']['lines_of_code']}")
     
-    print("\n📊 METRICS")
+    print("\nMETRICS")
     print(f"  Security Score: {result['security']['score']}/100")
     print(f"  Quality Grade: {result['quality']['grade']} ({result['quality']['quality_score']}/100)")
     print(f"  Performance Score: {result['performance']['performance_score']}/100 ({result['performance']['grade']})")
@@ -238,7 +233,7 @@ def test_command(args):
     if args.output:
         with open(args.output, 'w') as f:
             f.write(tests)
-        print(f"✅ Tests saved: {args.output}")
+        print(f"Tests saved: {args.output}")
     else:
         print(tests)
     
@@ -246,7 +241,7 @@ def test_command(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='🏆 World-Class SQL SP Analysis Suite',
+        description='World-Class SQL SP Analysis Suite',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     

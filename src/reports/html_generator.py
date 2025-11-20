@@ -149,7 +149,7 @@ class HTMLReportGenerator:
         
         return f"""
         <div class="section">
-            <div class="section-title">⭐ Code Quality</div>
+            <div class="section-title">Code Quality</div>
             <div style="margin: 20px 0;">
                 <span class="grade">{quality.get('grade', 'N/A')}</span>
                 <span style="margin-left: 20px; font-size: 1.2em;">Score: {quality.get('quality_score', 0)}/100</span>

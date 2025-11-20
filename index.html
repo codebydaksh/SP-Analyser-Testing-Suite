@@ -415,6 +415,8 @@
             font-size: 13px;
             overflow-x: auto;
             margin: 12px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         .demo-grid {
@@ -789,29 +791,50 @@
             }
         }
 
-        function generateTests() {
-            if (!currentResults) {
-                alert('Run analysis first to generate tests');
+        async function generateTests() {
+            const sql = document.getElementById('sqlInput').value.trim();
+            if (!sql) {
+                alert('Please enter SQL code first');
                 return;
             }
 
-            const tests = `-- tSQLt Unit Tests for ${currentResults.procedure_name}
-CREATE PROCEDURE [test].[test ${currentResults.procedure_name} with valid params]
-AS
-BEGIN
-    -- Arrange
-    DECLARE @expectedCount INT = 1;
-    
-    -- Act
-    EXEC ${currentResults.procedure_name} ${currentResults.parameters.map(p => p.name + ' = <value>').join(', ')};
-    
-    -- Assert
-    EXEC tSQLt.AssertEquals @expectedCount, @@ROWCOUNT;
-END;
-GO`;
+            const testOutput = document.getElementById('testOutput');
+            testOutput.innerHTML = '<div class="loading"><div class="spinner"></div>Generating tests...</div>';
 
-            document.getElementById('testOutput').innerHTML = `<div class="code-block">${tests}</div>`;
-            switchTab('tests');
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        sql: sql,
+                        action: 'generate-tests',
+                        format: 'tsqlt'
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    testOutput.innerHTML = `<div class="empty-state" style="color: #dc2626;">Error: ${result.error}</div>`;
+                    return;
+                }
+
+                if (result.tests) {
+                    const escapedTests = result.tests
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                    testOutput.innerHTML = `<pre class="code-block">${escapedTests}</pre>`;
+                } else {
+                    testOutput.innerHTML = '<div class="empty-state">No tests generated</div>';
+                }
+                
+                switchTab('tests');
+            } catch (error) {
+                testOutput.innerHTML = `<div class="empty-state" style="color: #dc2626;">Error: ${error.message}</div>`;
+            }
         }
 
         function exportResults(format) {
