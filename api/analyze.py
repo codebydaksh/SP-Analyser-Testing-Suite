@@ -263,24 +263,29 @@ class handler(BaseHTTPRequestHandler):
         proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)', sql_code, re.IGNORECASE)
         if proc_match:
             procedure_name = proc_match.group(1).strip('[]').strip()
+            # Remove any remaining brackets
+            procedure_name = procedure_name.replace('[', '').replace(']', '').strip()
         
         # Pattern 2: Fallback - any non-whitespace after CREATE PROCEDURE
         if procedure_name == 'Unknown':
             proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+([^\s]+)', sql_code, re.IGNORECASE)
             if proc_match:
                 procedure_name = proc_match.group(1).strip('[]').strip()
+                procedure_name = procedure_name.replace('[', '').replace(']', '').strip()
         
         # Pattern 3: Last resort - any PROCEDURE keyword followed by identifier
         if procedure_name == 'Unknown':
             proc_match = re.search(r'PROC(?:EDURE)?\s+(\[?[\w]+\]?\.\[?[\w]+\]?|\[?[\w]+\]?\.\w+|\w+\.\w+|\[?[\w]+\]?)', sql_code, re.IGNORECASE)
             if proc_match:
                 procedure_name = proc_match.group(1).strip('[]').strip()
+                procedure_name = procedure_name.replace('[', '').replace(']', '').strip()
         
         # Pattern 4: Most flexible - any word after PROCEDURE
         if procedure_name == 'Unknown':
             proc_match = re.search(r'PROC(?:EDURE)?\s+([^\s]+)', sql_code, re.IGNORECASE)
             if proc_match:
                 procedure_name = proc_match.group(1).strip('[]').strip()
+                procedure_name = procedure_name.replace('[', '').replace(']', '').strip()
         
         # If still unknown, return error with debugging info
         if procedure_name == 'Unknown':
@@ -331,39 +336,85 @@ class handler(BaseHTTPRequestHandler):
         }
     
     def _generate_tsqlt_tests(self, proc_name: str, parameters: list) -> str:
-        """Generate tSQLt test suite."""
-        test_class = f"Test{proc_name.replace('.', '_').replace('[', '').replace(']', '')}"
+        """Generate comprehensive tSQLt test suite."""
+        # Clean procedure name - remove brackets, handle schema properly
+        clean_proc_name = proc_name.replace('[', '').replace(']', '')
+        test_class = f"Test{clean_proc_name.replace('.', '_')}"
         
         tests = []
+        tests.append("-- ===========================================")
+        tests.append(f"-- tSQLt Unit Tests for {clean_proc_name}")
+        tests.append("-- Generated automatically")
+        tests.append("-- ===========================================\n")
+        
         tests.append(f"EXEC tSQLt.NewTestClass '{test_class}';")
         tests.append("GO\n")
         
-        # Test 1: Basic execution
-        tests.append(f"CREATE PROCEDURE [{test_class}].[test_BasicExecution]")
+        # Test 1: Basic execution with valid parameters
+        tests.append(f"CREATE PROCEDURE [{test_class}].[test_BasicExecution_WithValidParams]")
         tests.append("AS")
         tests.append("BEGIN")
         tests.append("    -- Arrange")
+        if parameters:
+            for p in parameters:
+                tests.append(f"    DECLARE {p['name']} {p['type']} = {self._get_default_value(p)};")
+        tests.append("    ")
         tests.append("    -- Act")
         if parameters:
-            param_values = ", ".join([self._get_default_value(p) for p in parameters])
-            tests.append(f"    EXEC {proc_name} {param_values};")
+            param_list = ", ".join([f"{p['name']} = {p['name']}" for p in parameters])
+            tests.append(f"    EXEC {clean_proc_name} {param_list};")
         else:
-            tests.append(f"    EXEC {proc_name};")
+            tests.append(f"    EXEC {clean_proc_name};")
+        tests.append("    ")
         tests.append("    -- Assert")
-        tests.append("    -- Add assertions here")
+        tests.append("    -- Verify procedure executed without errors")
+        tests.append("    IF @@ERROR <> 0")
+        tests.append("        EXEC tSQLt.Fail 'Procedure execution failed';")
         tests.append("END;")
         tests.append("GO\n")
         
-        # Test 2: NULL parameters (if any)
+        # Test 2: NULL parameters handling
         if parameters:
-            tests.append(f"CREATE PROCEDURE [{test_class}].[test_NullParameters]")
+            tests.append(f"CREATE PROCEDURE [{test_class}].[test_NullParameters_Handling]")
             tests.append("AS")
             tests.append("BEGIN")
-            tests.append("    -- Test with NULL parameters")
-            null_params = ", ".join(["NULL" for _ in parameters])
-            tests.append(f"    EXEC {proc_name} {null_params};")
+            tests.append("    -- Arrange")
+            tests.append("    -- Test with NULL parameters to verify null handling")
+            tests.append("    ")
+            tests.append("    -- Act")
+            null_params = ", ".join([f"{p['name']} = NULL" for p in parameters])
+            tests.append(f"    EXEC {clean_proc_name} {null_params};")
+            tests.append("    ")
+            tests.append("    -- Assert")
+            tests.append("    -- Verify procedure handles NULL gracefully")
+            tests.append("    IF @@ERROR <> 0")
+            tests.append("        EXEC tSQLt.Fail 'Procedure failed with NULL parameters';")
             tests.append("END;")
             tests.append("GO\n")
+        
+        # Test 3: Return value check
+        tests.append(f"CREATE PROCEDURE [{test_class}].[test_ReturnValue]")
+        tests.append("AS")
+        tests.append("BEGIN")
+        tests.append("    -- Arrange")
+        if parameters:
+            for p in parameters:
+                tests.append(f"    DECLARE {p['name']} {p['type']} = {self._get_default_value(p)};")
+        tests.append("    DECLARE @ReturnValue INT;")
+        tests.append("    ")
+        tests.append("    -- Act")
+        if parameters:
+            param_list = ", ".join([f"{p['name']} = {p['name']}" for p in parameters])
+            tests.append(f"    EXEC @ReturnValue = {clean_proc_name} {param_list};")
+        else:
+            tests.append(f"    EXEC @ReturnValue = {clean_proc_name};")
+        tests.append("    ")
+        tests.append("    -- Assert")
+        tests.append("    -- Verify return value is valid (adjust based on your procedure logic)")
+        tests.append("    -- IF @ReturnValue < 0")
+        tests.append("    --     EXEC tSQLt.Fail 'Procedure returned error code: ', @ReturnValue;")
+        tests.append("END;")
+        tests.append("GO\n")
         
         return "\n".join(tests)
     

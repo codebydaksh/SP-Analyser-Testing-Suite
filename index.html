@@ -861,6 +861,10 @@
             if (currentResults && currentResults.procedure_name && currentResults.procedure_name !== 'Unknown') {
                 procName = currentResults.procedure_name;
                 params = currentResults.parameters || [];
+                console.log('Using procedure name from analysis results:', procName);
+                // Clean the procedure name immediately
+                procName = procName.replace(/[\[\]]/g, '').trim();
+                console.log('Cleaned procedure name:', procName);
             } else if (isProcedureBodyOnly) {
                 // SQL is just the procedure body, not the full CREATE PROCEDURE statement
                 testOutput.innerHTML = `<div class="empty-state" style="color: #dc2626;">
@@ -917,6 +921,10 @@
                     }
                 }
                 
+                // Ensure procedure name is cleaned (remove any remaining brackets)
+                if (procName) {
+                    procName = procName.replace(/[\[\]]/g, '').trim();
+                }
                 console.log('Final extracted procedure name:', procName);
                 
                 // Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)
