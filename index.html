@@ -852,10 +852,35 @@
             let procName = null;
             let params = [];
 
+            // Check if SQL is just the procedure body (starts with BEGIN) without CREATE PROCEDURE
+            const sqlTrimmed = sql.trim();
+            const isProcedureBodyOnly = sqlTrimmed.toUpperCase().startsWith('BEGIN') || 
+                                        (!sqlTrimmed.toUpperCase().includes('CREATE') && !sqlTrimmed.toUpperCase().includes('PROCEDURE') && !sqlTrimmed.toUpperCase().includes('PROC'));
+
             // ALWAYS prefer analysis results - they're more accurate
             if (currentResults && currentResults.procedure_name && currentResults.procedure_name !== 'Unknown') {
                 procName = currentResults.procedure_name;
                 params = currentResults.parameters || [];
+            } else if (isProcedureBodyOnly) {
+                // SQL is just the procedure body, not the full CREATE PROCEDURE statement
+                testOutput.innerHTML = `<div class="empty-state" style="color: #dc2626;">
+                    <strong>Error:</strong> SQL appears to be just the procedure body, not a complete CREATE PROCEDURE statement.<br><br>
+                    <strong>Problem:</strong> Your SQL starts with "BEGIN" but is missing the "CREATE PROCEDURE [schema].[name]" declaration at the beginning.<br><br>
+                    <strong>Solution:</strong><br>
+                    1. Include the full CREATE PROCEDURE statement, for example:<br>
+                    <code style="background: #f5f5f5; padding: 4px; display: block; margin: 8px 0; border-radius: 4px;">
+                    CREATE PROCEDURE [dbo].[YourProcedureName]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;@Param1 INT,<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;@Param2 VARCHAR(50)<br>
+                    AS<br>
+                    BEGIN<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;-- Your existing code here<br>
+                    END
+                    </code><br>
+                    2. OR click "Analyze" first, then "Generate Tests" - the analyzer can extract the procedure name from the body if it was analyzed before.
+                </div>`;
+                switchTab('tests');
+                return;
             } else {
                 // Parse SQL directly with more robust patterns
                 console.log('Parsing SQL for procedure name. SQL length:', sql.length);

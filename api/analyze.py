@@ -229,6 +229,29 @@ class handler(BaseHTTPRequestHandler):
     
     def generate_tests(self, sql_code: str, format_type: str = 'tsqlt') -> dict:
         """Generate unit tests for the stored procedure."""
+        # Check if SQL is just the procedure body (starts with BEGIN) without CREATE PROCEDURE
+        sql_trimmed = sql_code.strip()
+        is_procedure_body_only = (sql_trimmed.upper().startswith('BEGIN') or 
+                                 (not 'CREATE' in sql_trimmed.upper() and 
+                                  not 'PROCEDURE' in sql_trimmed.upper() and 
+                                  not 'PROC' in sql_trimmed.upper()))
+        
+        if is_procedure_body_only:
+            return {
+                'success': False,
+                'error': 'SQL appears to be just the procedure body, not a complete CREATE PROCEDURE statement. Please include the full CREATE PROCEDURE [schema].[name] declaration at the beginning.',
+                'procedure_name': 'Unknown',
+                'format': format_type,
+                'tests': None,
+                'debug': {
+                    'sql_length': len(sql_code),
+                    'sql_preview': sql_code[:200],
+                    'is_body_only': True,
+                    'has_create': False,
+                    'has_procedure': False
+                }
+            }
+        
         # Extract procedure name - try multiple patterns for robustness
         procedure_name = 'Unknown'
         
