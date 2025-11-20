@@ -17,7 +17,7 @@ class MarkdownReportGenerator:
         lines.append("\n---\n")
         
         # Summary
-        lines.append("## 📊 Summary\n")
+        lines.append("## Summary\n")
         lines.append(f"- **Procedure:** `{sp_name}`")
         lines.append(f"- **Lines of Code:** {analysis_data.get('basic', {}).get('lines_of_code', 0)}")
         lines.append(f"- **Security Score:** {analysis_data.get('security', {}).get('score', 0)}/100")
@@ -60,7 +60,7 @@ class MarkdownReportGenerator:
         # Performance Issues
         performance = analysis_data.get('performance', {})
         if performance.get('issues'):
-            lines.append("## 🚀 Performance Issues\n")
+            lines.append("## Performance Issues\n")
             for issue in performance.get('issues'):
                 lines.append(f"### {issue['issue']} [{issue['severity']}]")
                 lines.append(f"> **Impact:** {issue['impact']}")
@@ -69,7 +69,7 @@ class MarkdownReportGenerator:
                     lines.append(f"\n```sql\n{issue['example']}\n```\n")
         
         # Metrics
-        lines.append("## 📈 Metrics\n")
+        lines.append("## Metrics\n")
         lines.append("| Metric | Value |")
         lines.append("|--------|-------|")
         complexity = analysis_data.get('complexity', {})

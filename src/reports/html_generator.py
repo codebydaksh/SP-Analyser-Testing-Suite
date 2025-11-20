@@ -62,7 +62,7 @@ class HTMLReportGenerator:
 </head>
 <body>
     <div class="container">
-        <h1>📊 Stored Procedure Analysis Report</h1>
+        <h1>Stored Procedure Analysis Report</h1>
         <div class="timestamp">Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>
         <div class="timestamp">Procedure: <strong>{sp_name}</strong></div>
         
@@ -118,7 +118,7 @@ class HTMLReportGenerator:
                     <span class="severity-badge {issue['severity'].lower()}">{issue['severity']}</span>
                 </div>
                 <div>{issue['message']}</div>
-                <div style="margin-top: 8px; color: #4a5568;">💡 {issue['recommendation']}</div>
+                <div style="margin-top: 8px; color: #4a5568;"><strong>Recommendation:</strong> {issue['recommendation']}</div>
             </div>
             """
         
@@ -143,7 +143,7 @@ class HTMLReportGenerator:
                     <span class="severity-badge {issue['severity'].lower()}">{issue['severity']}</span>
                 </div>
                 <div>{issue['message']}</div>
-                <div style="margin-top: 8px; color: #4a5568;">💡 {issue['recommendation']}</div>
+                <div style="margin-top: 8px; color: #4a5568;"><strong>Recommendation:</strong> {issue['recommendation']}</div>
             </div>
             """
         
@@ -165,7 +165,7 @@ class HTMLReportGenerator:
         
         return f"""
         <div class="section">
-            <div class="section-title">📈 Complexity Metrics</div>
+            <div class="section-title">Complexity Metrics</div>
             <table>
                 <tr><th>Metric</th><th>Value</th></tr>
                 <tr><td>Cyclomatic Complexity</td><td>{complexity.get('complexity', 0)}</td></tr>
