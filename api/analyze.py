@@ -98,7 +98,8 @@ class handler(BaseHTTPRequestHandler):
         
         # Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)
         params = []
-        signature_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+[\[\].\w]+\s*(.*?)\s+AS\b', 
+        # Use flexible pattern that handles any procedure name format
+        signature_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+[^\s]+\s*(.*?)\s+AS\b', 
                                    sql_code, re.IGNORECASE | re.DOTALL)
         if signature_match:
             params_section = signature_match.group(1)
@@ -107,7 +108,8 @@ class handler(BaseHTTPRequestHandler):
             for match in re.finditer(param_pattern, params_section, re.IGNORECASE):
                 param_name = '@' + match.group(1)
                 param_type = match.group(2).strip().rstrip(',').strip()
-                if param_type:
+                # Filter out SQL keywords that might be captured
+                if param_type and not re.match(r'^(AS|WITH|FOR|OUTPUT)$', param_type, re.IGNORECASE):
                     params.append({
                         'name': param_name,
                         'type': param_type
@@ -260,7 +262,8 @@ class handler(BaseHTTPRequestHandler):
         
         # Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)
         params = []
-        signature_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+[\[\].\w]+\s*(.*?)\s+AS\b', 
+        # Use flexible pattern that handles any procedure name format
+        signature_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+[^\s]+\s*(.*?)\s+AS\b', 
                                    sql_code, re.IGNORECASE | re.DOTALL)
         if signature_match:
             params_section = signature_match.group(1)
@@ -269,7 +272,8 @@ class handler(BaseHTTPRequestHandler):
             for match in re.finditer(param_pattern, params_section, re.IGNORECASE):
                 param_name = '@' + match.group(1)
                 param_type = match.group(2).strip().rstrip(',').strip()
-                if param_type:
+                # Filter out SQL keywords that might be captured
+                if param_type and not re.match(r'^(AS|WITH|FOR|OUTPUT)$', param_type, re.IGNORECASE):
                     params.append({
                         'name': param_name,
                         'type': param_type
