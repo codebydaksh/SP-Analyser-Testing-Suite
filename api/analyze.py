@@ -1,27 +1,10 @@
 """
 Vercel Serverless Function for T-SQL Analyzer
+Simplified version with embedded analysis logic
 """
 from http.server import BaseHTTPRequestHandler
 import json
-import sys
-import os
-
-# Add parent directory to path to import src modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
-try:
-    from src.parser.tsql_text_parser import TSQLTextParser
-    from src.analyzer.security_analyzer import SecurityAnalyzer
-    from src.analyzer.quality_analyzer import CodeQualityAnalyzer
-    from src.analyzer.performance_analyzer import PerformanceAnalyzer
-except ImportError as e:
-    # Fallback: add src directory explicitly
-    src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
-    sys.path.insert(0, src_path)
-    from parser.tsql_text_parser import TSQLTextParser
-    from analyzer.security_analyzer import SecurityAnalyzer
-    from analyzer.quality_analyzer import CodeQualityAnalyzer
-    from analyzer.performance_analyzer import PerformanceAnalyzer
+import re
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -49,8 +32,9 @@ class handler(BaseHTTPRequestHandler):
             'usage': {
                 'method': 'POST',
                 'body': {'sql': 'CREATE PROCEDURE ... AS BEGIN ... END'},
-                'example': 'curl -X POST https://sp-analyser-testing-suite.vercel.app/api/analyze -H "Content-Type: application/json" -d \'{"sql":"CREATE PROCEDURE dbo.Test AS BEGIN SELECT 1; END"}\''
-            }
+                'example': 'POST with JSON body containing "sql" field'
+            },
+            'github': 'https://github.com/codebydaksh/SP-Analyser-Testing-Suite'
         }
         
         self.wfile.write(json.dumps(info, indent=2).encode())
@@ -76,35 +60,8 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'No SQL code provided in "sql" field'}).encode())
                 return
             
-            # Run analysis
-            parser = TSQLTextParser()
-            security = SecurityAnalyzer()
-            quality = CodeQualityAnalyzer()
-            performance = PerformanceAnalyzer()
-            
-            quality_result = quality.analyze(sql_code)
-            performance_result = performance.analyze(sql_code)
-            
-            result = {
-                'success': True,
-                'procedure_name': parser.extract_procedure_name(sql_code),
-                'parameters': parser.extract_parameters(sql_code),
-                'tables': parser.extract_tables(sql_code),
-                'security': {
-                    'score': security.get_security_score(sql_code),
-                    'analysis': security.analyze(sql_code)
-                },
-                'quality': {
-                    'score': quality_result.get('quality_score', 0),
-                    'grade': quality_result.get('grade', 'F'),
-                    'issues': quality_result.get('issues', [])
-                },
-                'performance': {
-                    'score': performance_result.get('performance_score', 0),
-                    'grade': performance_result.get('grade', 'F'),
-                    'issues': performance_result.get('issues', [])
-                }
-            }
+            # Perform basic analysis
+            result = self.analyze_sql(sql_code)
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -127,3 +84,130 @@ class handler(BaseHTTPRequestHandler):
                 'error': f'Server error: {str(e)}',
                 'type': type(e).__name__
             }).encode())
+    
+    def analyze_sql(self, sql_code):
+        """Simplified SQL analysis"""
+        # Extract procedure name
+        proc_match = re.search(r'CREATE\s+PROC(?:EDURE)?\s+(\[?[\w\.\]]+)', sql_code, re.IGNORECASE)
+        procedure_name = proc_match.group(1) if proc_match else 'Unknown'
+        
+        # Extract parameters
+        params = []
+        param_pattern = r'@(\w+)\s+(\w+(?:\(\d+(?:,\d+)?\))?)'
+        for match in re.finditer(param_pattern, sql_code):
+            params.append({
+                'name': f'@{match.group(1)}',
+                'type': match.group(2)
+            })
+        
+        # Extract tables
+        tables = []
+        table_patterns = [
+            r'FROM\s+([\w\.\[\]]+)',
+            r'JOIN\s+([\w\.\[\]]+)',
+            r'INTO\s+([\w\.\[\]]+)',
+            r'UPDATE\s+([\w\.\[\]]+)'
+        ]
+        for pattern in table_patterns:
+            for match in re.finditer(pattern, sql_code, re.IGNORECASE):
+                table = match.group(1).strip('[]')
+                if table and table not in tables:
+                    tables.append(table)
+        
+        # Security analysis
+        security_score = 100
+        security_issues = []
+        
+        # Check for SQL injection risks
+        if re.search(r'EXEC(?:UTE)?\s*\(\s*@', sql_code, re.IGNORECASE):
+            security_score -= 20
+            security_issues.append({
+                'severity': 'HIGH',
+                'type': 'Dynamic SQL',
+                'message': 'Dynamic SQL with variables detected',
+                'recommendation': 'Use sp_executesql with parameters'
+            })
+        
+        if re.search(r'\+\s*@\w+\s*\+|@\w+\s*\+', sql_code, re.IGNORECASE):
+            security_score -= 10
+            security_issues.append({
+                'severity': 'MEDIUM',
+                'type': 'String Concatenation',
+                'message': 'String concatenation detected',
+                'recommendation': 'Use parameterized queries'
+            })
+        
+        # Quality analysis
+        lines = len([l for l in sql_code.split('\n') if l.strip()])
+        quality_score = 100
+        quality_issues = []
+        
+        if not re.search(r'BEGIN\s+TRY', sql_code, re.IGNORECASE):
+            quality_score -= 10
+            quality_issues.append({
+                'category': 'Error Handling',
+                'severity': 'MEDIUM',
+                'message': 'No TRY-CATCH block found',
+                'recommendation': 'Add error handling'
+            })
+        
+        # Calculate grade
+        if quality_score >= 90:
+            grade = 'A'
+        elif quality_score >= 80:
+            grade = 'B'
+        elif quality_score >= 70:
+            grade = 'C'
+        elif quality_score >= 60:
+            grade = 'D'
+        else:
+            grade = 'F'
+        
+        # Performance analysis
+        perf_score = 100
+        perf_issues = []
+        
+        if re.search(r'CURSOR', sql_code, re.IGNORECASE):
+            perf_score -= 25
+            perf_issues.append({
+                'category': 'Performance',
+                'severity': 'HIGH',
+                'issue': 'Cursor Usage Detected',
+                'impact': 'Cursors are slow',
+                'recommendation': 'Use SET-based operations'
+            })
+        
+        if perf_score >= 90:
+            perf_grade = 'A'
+        elif perf_score >= 80:
+            perf_grade = 'B'
+        elif perf_score >= 70:
+            perf_grade = 'C'
+        else:
+            perf_grade = 'F'
+        
+        return {
+            'success': True,
+            'procedure_name': procedure_name,
+            'parameters': params,
+            'tables': tables,
+            'lines_of_code': lines,
+            'security': {
+                'score': max(0, security_score),
+                'analysis': {
+                    'sql_injection_risks': security_issues,
+                    'permission_issues': [],
+                    'security_warnings': []
+                }
+            },
+            'quality': {
+                'score': max(0, quality_score),
+                'grade': grade,
+                'issues': quality_issues
+            },
+            'performance': {
+                'score': max(0, perf_score),
+                'grade': perf_grade,
+                'issues': perf_issues
+            }
+        }
