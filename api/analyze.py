@@ -92,18 +92,26 @@ class handler(BaseHTTPRequestHandler):
     
     def analyze_sql(self, sql_code):
         """Simplified SQL analysis"""
-        # Extract procedure name
-        proc_match = re.search(r'CREATE\s+PROC(?:EDURE)?\s+(\[?[\w\.\]]+)', sql_code, re.IGNORECASE)
-        procedure_name = proc_match.group(1) if proc_match else 'Unknown'
+        # Extract procedure name - handle OR ALTER, schemas, brackets
+        proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w\.\]]+\]?)', sql_code, re.IGNORECASE)
+        procedure_name = proc_match.group(1).strip('[]') if proc_match else 'Unknown'
         
-        # Extract parameters
+        # Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)
         params = []
-        param_pattern = r'@(\w+)\s+(\w+(?:\(\d+(?:,\d+)?\))?)'
-        for match in re.finditer(param_pattern, sql_code):
-            params.append({
-                'name': f'@{match.group(1)}',
-                'type': match.group(2)
-            })
+        signature_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+[\[\].\w]+\s*(.*?)\s+AS\b', 
+                                   sql_code, re.IGNORECASE | re.DOTALL)
+        if signature_match:
+            params_section = signature_match.group(1)
+            # Match: @ParamName TYPE [= DEFAULT] followed by comma or end
+            param_pattern = r'@(\w+)\s+([\w\(\)\s,]+?)(?:\s*=\s*[^,\)]+)?(?=\s*[,\)]|\s*$)'
+            for match in re.finditer(param_pattern, params_section, re.IGNORECASE):
+                param_name = '@' + match.group(1)
+                param_type = match.group(2).strip().rstrip(',').strip()
+                if param_type:
+                    params.append({
+                        'name': param_name,
+                        'type': param_type
+                    })
         
         # Extract tables
         tables = []
@@ -219,18 +227,26 @@ class handler(BaseHTTPRequestHandler):
     
     def generate_tests(self, sql_code: str, format_type: str = 'tsqlt') -> dict:
         """Generate unit tests for the stored procedure."""
-        # Extract procedure name
-        proc_match = re.search(r'CREATE\s+PROC(?:EDURE)?\s+(\[?[\w\.\]]+)', sql_code, re.IGNORECASE)
-        procedure_name = proc_match.group(1) if proc_match else 'Unknown'
+        # Extract procedure name - handle OR ALTER, schemas, brackets
+        proc_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w\.\]]+\]?)', sql_code, re.IGNORECASE)
+        procedure_name = proc_match.group(1).strip('[]') if proc_match else 'Unknown'
         
-        # Extract parameters (same logic as analyze_sql)
+        # Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)
         params = []
-        param_pattern = r'@(\w+)\s+(\w+(?:\(\d+(?:,\d+)?\))?)'
-        for match in re.finditer(param_pattern, sql_code):
-            params.append({
-                'name': f'@{match.group(1)}',
-                'type': match.group(2)
-            })
+        signature_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+[\[\].\w]+\s*(.*?)\s+AS\b', 
+                                   sql_code, re.IGNORECASE | re.DOTALL)
+        if signature_match:
+            params_section = signature_match.group(1)
+            # Match: @ParamName TYPE [= DEFAULT] followed by comma or end
+            param_pattern = r'@(\w+)\s+([\w\(\)\s,]+?)(?:\s*=\s*[^,\)]+)?(?=\s*[,\)]|\s*$)'
+            for match in re.finditer(param_pattern, params_section, re.IGNORECASE):
+                param_name = '@' + match.group(1)
+                param_type = match.group(2).strip().rstrip(',').strip()
+                if param_type:
+                    params.append({
+                        'name': param_name,
+                        'type': param_type
+                    })
         
         # Generate tests based on format
         if format_type == 'ssdt':
@@ -302,17 +318,31 @@ class handler(BaseHTTPRequestHandler):
     
     def _get_default_value(self, param: dict) -> str:
         """Get a default test value for a parameter based on its type."""
-        param_type = param.get('type', 'VARCHAR').upper()
+        param_type = param.get('type', 'VARCHAR').upper().strip()
         
-        if 'INT' in param_type or 'NUMERIC' in param_type or 'DECIMAL' in param_type or 'BIGINT' in param_type or 'SMALLINT' in param_type or 'TINYINT' in param_type:
+        # Extract base type (remove size/precision like VARCHAR(50) -> VARCHAR)
+        base_type = param_type.split('(')[0].strip()
+        
+        # Integer types
+        if base_type in ('INT', 'INTEGER', 'BIGINT', 'SMALLINT', 'TINYINT'):
             return "1"
-        elif 'VARCHAR' in param_type or 'CHAR' in param_type or 'TEXT' in param_type or 'NVARCHAR' in param_type or 'NCHAR' in param_type:
-            return "'test'"
-        elif 'DATE' in param_type or 'TIME' in param_type or 'DATETIME' in param_type:
-            return "'2024-01-01'"
-        elif 'BIT' in param_type:
-            return "1"
-        elif 'FLOAT' in param_type or 'REAL' in param_type or 'MONEY' in param_type:
+        # Numeric/Decimal types
+        elif base_type in ('NUMERIC', 'DECIMAL', 'FLOAT', 'REAL', 'MONEY', 'SMALLMONEY'):
             return "1.0"
+        # String types
+        elif base_type in ('VARCHAR', 'CHAR', 'TEXT', 'NVARCHAR', 'NCHAR', 'NTEXT'):
+            return "'test'"
+        # Date/Time types
+        elif base_type in ('DATE', 'TIME', 'DATETIME', 'DATETIME2', 'SMALLDATETIME', 'DATETIMEOFFSET'):
+            return "'2024-01-01'"
+        # Boolean
+        elif base_type == 'BIT':
+            return "1"
+        # Binary
+        elif base_type in ('BINARY', 'VARBINARY', 'IMAGE'):
+            return "0x00"
+        # Unique identifier
+        elif base_type == 'UNIQUEIDENTIFIER':
+            return "'00000000-0000-0000-0000-000000000000'"
         else:
-            return "'default'"
+            return "NULL"

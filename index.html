@@ -857,19 +857,32 @@
                 procName = currentResults.procedure_name;
                 params = currentResults.parameters || [];
             } else {
-                // Parse SQL directly
-                const procMatch = sql.match(/CREATE\s+PROC(?:EDURE)?\s+(\[?[\w\.\]]+)/i);
+                // Parse SQL directly - extract procedure name
+                const procMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+(\[?[\w\.\]]+\]?)/i);
                 if (procMatch) {
-                    procName = procMatch[1];
+                    procName = procMatch[1].replace(/[\[\]]/g, '');
                 }
                 
-                const paramPattern = /@(\w+)\s+(\w+(?:\(\d+(?:,\d+)?\))?)/g;
-                let match;
-                while ((match = paramPattern.exec(sql)) !== null) {
-                    params.push({
-                        name: '@' + match[1],
-                        type: match[2]
-                    });
+                // Extract parameters ONLY from the procedure signature (between CREATE PROCEDURE and AS)
+                const signatureMatch = sql.match(/CREATE\s+(?:OR\s+ALTER\s+)?PROC(?:EDURE)?\s+[\[\].\w]+\s*(.*?)\s+AS\b/is);
+                if (signatureMatch) {
+                    const paramsSection = signatureMatch[1];
+                    // Match: @ParamName TYPE [= DEFAULT] followed by comma or end
+                    const paramPattern = /@(\w+)\s+([\w\(\)\s,]+?)(?:\s*=\s*[^,\)]+)?(?=\s*[,\)]|\s*$)/gi;
+                    let match;
+                    while ((match = paramPattern.exec(paramsSection)) !== null) {
+                        const paramName = '@' + match[1];
+                        let paramType = match[2].trim();
+                        // Clean up type - remove trailing commas/spaces
+                        paramType = paramType.replace(/,\s*$/, '').trim();
+                        // Handle types like VARCHAR(50), INT, etc.
+                        if (paramType) {
+                            params.push({
+                                name: paramName,
+                                type: paramType
+                            });
+                        }
+                    }
                 }
             }
 
@@ -925,20 +938,41 @@
         }
 
         function getDefaultValue(param) {
-            const paramType = (param.type || 'VARCHAR').toUpperCase();
+            let paramType = (param.type || 'VARCHAR').toUpperCase().trim();
             
-            if (paramType.includes('INT') || paramType.includes('NUMERIC') || paramType.includes('DECIMAL') || paramType.includes('BIGINT') || paramType.includes('SMALLINT') || paramType.includes('TINYINT')) {
+            // Extract base type (remove size/precision like VARCHAR(50) -> VARCHAR)
+            const baseType = paramType.split('(')[0].trim();
+            
+            // Integer types
+            if (['INT', 'INTEGER', 'BIGINT', 'SMALLINT', 'TINYINT'].includes(baseType)) {
                 return '1';
-            } else if (paramType.includes('VARCHAR') || paramType.includes('CHAR') || paramType.includes('TEXT') || paramType.includes('NVARCHAR') || paramType.includes('NCHAR')) {
-                return "'test'";
-            } else if (paramType.includes('DATE') || paramType.includes('TIME') || paramType.includes('DATETIME')) {
-                return "'2024-01-01'";
-            } else if (paramType.includes('BIT')) {
-                return '1';
-            } else if (paramType.includes('FLOAT') || paramType.includes('REAL') || paramType.includes('MONEY')) {
+            }
+            // Numeric/Decimal types
+            else if (['NUMERIC', 'DECIMAL', 'FLOAT', 'REAL', 'MONEY', 'SMALLMONEY'].includes(baseType)) {
                 return '1.0';
-            } else {
-                return "'default'";
+            }
+            // String types
+            else if (['VARCHAR', 'CHAR', 'TEXT', 'NVARCHAR', 'NCHAR', 'NTEXT'].includes(baseType)) {
+                return "'test'";
+            }
+            // Date/Time types
+            else if (['DATE', 'TIME', 'DATETIME', 'DATETIME2', 'SMALLDATETIME', 'DATETIMEOFFSET'].includes(baseType)) {
+                return "'2024-01-01'";
+            }
+            // Boolean
+            else if (baseType === 'BIT') {
+                return '1';
+            }
+            // Binary
+            else if (['BINARY', 'VARBINARY', 'IMAGE'].includes(baseType)) {
+                return '0x00';
+            }
+            // Unique identifier
+            else if (baseType === 'UNIQUEIDENTIFIER') {
+                return "'00000000-0000-0000-0000-000000000000'";
+            }
+            else {
+                return 'NULL';
             }
         }
 
