@@ -118,23 +118,23 @@ class SecurityAnalyzer:
         
         score = 100
         
-        # Deduct points for issues
+        # Deduct points for issues (VERY STRICT for production safety)
         for issue in analysis['sql_injection_risks']:
             if issue['severity'] == 'HIGH':
-                score -= 20
+                score -= 30  # Critical risk
             elif issue['severity'] == 'MEDIUM':
-                score -= 10
+                score -= 15  # Significant risk
         
         for issue in analysis['permission_issues']:
             if issue['severity'] == 'HIGH':
-                score -= 15
+                score -= 25  # Privilege escalation
             elif issue['severity'] == 'MEDIUM':
-                score -= 8
+                score -= 12  # Context switching
         
         for warning in analysis['security_warnings']:
             if warning['severity'] == 'MEDIUM':
-                score -= 5
+                score -= 8
             elif warning['severity'] == 'LOW':
-                score -= 2
+                score -= 4
         
         return max(0, score)

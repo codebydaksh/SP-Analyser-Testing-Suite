@@ -38,8 +38,8 @@ class TSQLTextParser:
         parameters = []
         
         # Enhanced pattern to capture parameters with types and defaults
-        # Matches: @ParamName TYPE [= DEFAULT]
-        param_pattern = r'@(\w+)\s+([\w\(\),\s]+?)(?:\s*=\s*([^,\)]+))?(?=\s*[,\)]|\s+AS\b)'
+        # FIXED: Handles multiple params separated by commas
+        param_pattern = r'@(\w+)\s+([\w\(\),\s]+?)(?:\s*=\s*([^,]+))?(?=\s*,|\s*$)'
         
         # Find parameters in the signature
         create_match = re.search(r'CREATE\s+(?:OR\s+ALTER\s+)?PROCEDURE\s+[\[\].\w]+\s*(.*?)\s+AS\b', 
@@ -61,12 +61,27 @@ class TSQLTextParser:
         return parameters
     
     def extract_tables(self, sql_text: str) -> List[str]:
-        """Extract table names including temp tables."""
+        """Extract table names including temp tables and CTEs."""
         tables = set()
+        
+        # Pattern 1: FROM/JOIN/INTO/UPDATE clauses
         for match in self.table_pattern.finditer(sql_text):
             table = match.group(1).strip('[]')
             if not table.startswith('@'):  # Only exclude variables, INCLUDE temp tables
                 tables.add(table)
+        
+        # Pattern 2: CREATE TABLE #TempTable and ##GlobalTemp
+        create_table_pattern = re.compile(r'CREATE\s+TABLE\s+(##?\w+)', re.IGNORECASE)
+        for match in create_table_pattern.finditer(sql_text):
+            temp_table = match.group(1)
+            tables.add(temp_table)
+        
+        # Pattern 3: CTEs (Common Table Expressions) - WITH SomeCTE AS (...)
+        cte_pattern = re.compile(r'WITH\s+(\w+)\s+AS\s*\(', re.IGNORECASE)
+        for match in cte_pattern.finditer(sql_text):
+            cte_name = match.group(1)
+            tables.add(cte_name)
+        
         return sorted(list(tables))
     
     def extract_exec_calls(self, sql_text: str) -> List[str]:

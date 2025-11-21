@@ -53,7 +53,7 @@ UPDATE t1 SET ... FROM table1 t1 INNER JOIN table2 t2 ...
         """Detect potential implicit conversions."""
         issues = []
         
-        # VARCHAR comparison with numbers
+        # Pattern 1: VARCHAR comparison with bare numbers (e.g., WHERE varchar_col = 123)
         if re.search(r"WHERE\s+\w+\s*=\s*\d+", sql_text, re.IGNORECASE):
             issues.append({
                 'category': 'Performance',
@@ -68,6 +68,23 @@ WHERE varchar_column = 123
 WHERE varchar_column = '123'
 OR
 WHERE int_column = 123
+                '''.strip()
+            })
+        
+        # Pattern 2: ID columns (UserId, OrderId, CustomerId) compared with STRING literals
+        # This catches cases like: WHERE UserId = '123' (should be numeric)
+        if re.search(r"WHERE\s+\w*(?:Id|ID)\w*\s*=\s*'[^']*'", sql_text, re.IGNORECASE):
+            issues.append({
+                'category': 'Performance',
+                'severity': 'MEDIUM',
+                'issue': 'Implicit Conversion on ID Column',
+                'impact': 'String comparison on numeric ID column prevents index usage',
+                'recommendation': 'Use numeric literals for ID columns',
+                'example': '''
+-- BAD:
+WHERE UserId = '123'
+-- GOOD:
+WHERE UserId = 123
                 '''.strip()
             })
         
