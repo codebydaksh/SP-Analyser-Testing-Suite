@@ -337,9 +337,16 @@ class handler(BaseHTTPRequestHandler):
     
     def _generate_tsqlt_tests(self, proc_name: str, parameters: list) -> str:
         """Generate comprehensive tSQLt test suite."""
-        # Clean procedure name - remove brackets, handle schema properly
+        # Clean procedure name - remove brackets for test class name
         clean_proc_name = proc_name.replace('[', '').replace(']', '')
         test_class = f"Test{clean_proc_name.replace('.', '_')}"
+        
+        # For EXEC statements, properly bracket the procedure name
+        if '.' in clean_proc_name:
+            schema, name = clean_proc_name.split('.', 1)
+            exec_proc_name = f"[{schema}].[{name}]"
+        else:
+            exec_proc_name = f"[{clean_proc_name}]"
         
         tests = []
         tests.append("-- ===========================================")
@@ -362,9 +369,9 @@ class handler(BaseHTTPRequestHandler):
         tests.append("    -- Act")
         if parameters:
             param_list = ", ".join([f"{p['name']} = {p['name']}" for p in parameters])
-            tests.append(f"    EXEC {clean_proc_name} {param_list};")
+            tests.append(f"    EXEC {exec_proc_name} {param_list};")
         else:
-            tests.append(f"    EXEC {clean_proc_name};")
+            tests.append(f"    EXEC {exec_proc_name};")
         tests.append("    ")
         tests.append("    -- Assert")
         tests.append("    -- Verify procedure executed without errors")
