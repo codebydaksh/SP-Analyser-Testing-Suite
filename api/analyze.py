@@ -390,7 +390,7 @@ class handler(BaseHTTPRequestHandler):
             tests.append("    ")
             tests.append("    -- Act")
             null_params = ", ".join([f"{p['name']} = NULL" for p in parameters])
-            tests.append(f"    EXEC {clean_proc_name} {null_params};")
+            tests.append(f"    EXEC {exec_proc_name} {null_params};")
             tests.append("    ")
             tests.append("    -- Assert")
             tests.append("    -- Verify procedure handles NULL gracefully")
@@ -412,9 +412,9 @@ class handler(BaseHTTPRequestHandler):
         tests.append("    -- Act")
         if parameters:
             param_list = ", ".join([f"{p['name']} = {p['name']}" for p in parameters])
-            tests.append(f"    EXEC @ReturnValue = {clean_proc_name} {param_list};")
+            tests.append(f"    EXEC @ReturnValue = {exec_proc_name} {param_list};")
         else:
-            tests.append(f"    EXEC @ReturnValue = {clean_proc_name};")
+            tests.append(f"    EXEC @ReturnValue = {exec_proc_name};")
         tests.append("    ")
         tests.append("    -- Assert")
         tests.append("    -- Verify return value is valid (adjust based on your procedure logic)")
