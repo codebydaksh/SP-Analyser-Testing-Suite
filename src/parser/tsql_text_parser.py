@@ -68,6 +68,9 @@ class TSQLTextParser:
         for match in self.table_pattern.finditer(sql_text):
             table = match.group(1).strip('[]')
             if not table.startswith('@'):  # Only exclude variables, INCLUDE temp tables
+                # Normalize: remove schema prefix to avoid duplicates (e.g., 'dbo.Sales' -> 'Sales')
+                if '.' in table:
+                    table = table.split('.', 1)[1]
                 tables.add(table)
         
         # Pattern 2: CREATE TABLE #TempTable and ##GlobalTemp
