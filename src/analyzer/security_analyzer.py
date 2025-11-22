@@ -53,8 +53,37 @@ class SecurityAnalyzer:
                     'recommendation': 'Use sp_executesql with proper @params definition'
                 })
         
+        # OPENROWSET with concatenation (external data source injection)
+        if re.search(r'OPENROWSET\s*\(.*?\+|OPENROWSET.*?[\'"]\s*\+', sql_text, re.IGNORECASE):
+            issues.append({
+                'severity': 'CRITICAL',
+                'type': 'OPENROWSET Injection',
+                'message': 'OPENROWSET with concatenated parameters - SQL injection risk',
+                'recommendation': 'Never concatenate user input in OPENROWSET statements'
+            })
+        
+        # Second-order injection (storing user input then using in EXEC)
+        if re.search(r'SELECT\s+@\w+\s*=.*?FROM.*?EXEC\s*\(.*?@\w+', sql_text, re.IGNORECASE | re.DOTALL):
+            if not any(issue['type'] == 'Dynamic SQL' or issue['type'] == 'Second-Order Injection' for issue in issues):
+                issues.append({
+                    'severity': 'HIGH',
+                    'type': 'Second-Order Injection',
+                    'message': 'Potential second-order injection: data from DB used in dynamic SQL',
+                    'recommendation': 'Sanitize all data before using in dynamic queries'
+                })
+        
+        # String concatenation used in FROM clause (classic SQL injection)
+        if re.search(r'FROM\s+[\'"]?\s*\+|SELECT\s+\*\s+FROM\s+[\'"]\s*\+', sql_text, re.IGNORECASE):
+            if not any(issue['type'] == 'String Concatenation' for issue in issues):
+                issues.append({
+                    'severity': 'HIGH',
+                    'type': 'String Concatenation',
+                    'message': 'String concatenation in FROM clause - SQL injection risk',
+                    'recommendation': 'Use parameterized table names or whitelisting'
+                })
+        
         # Direct string comparison (potential injection)
-        if re.search(r"WHERE\s+\w+\s*=\s*'\s*\+\s*@", sql_text, re.IGNORECASE):
+        if re.search(r"WHERE\s+\w+\s*=\s*['\"']\s*\+\s*@", sql_text, re.IGNORECASE):
             issues.append({
                 'severity': 'HIGH',
                 'type': 'Unsafe WHERE Clause',

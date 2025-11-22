@@ -18,6 +18,8 @@ class PerformanceAnalyzer:
         issues.extend(self.detect_or_conditions(sql_text))
         issues.extend(self.detect_leading_wildcards(sql_text))
         issues.extend(self.detect_select_into(sql_text))
+        issues.extend(self.detect_select_star_without_where(sql_text))
+        issues.extend(self.detect_multiple_table_scans(sql_text))
         
         score = self.calculate_performance_score(issues)
         
@@ -177,6 +179,60 @@ SELECT * INTO #temp FROM table1
 -- For permanent tables, prefer:
 CREATE TABLE dbo.NewTable (...);
 INSERT INTO dbo.NewTable SELECT ...
+                '''.strip()
+            })
+        
+        return issues
+    
+    def detect_select_star_without_where(self, sql_text: str) -> List[Dict]:
+        """Detect SELECT * from large tables without WHERE clause."""
+        issues = []
+        
+        # Enhanced pattern to catch SELECT * with no WHERE
+        if re.search(r'SELECT\s+\*\s+FROM\s+\w+(?!.*WHERE)', sql_text, re.IGNORECASE | re.DOTALL):
+            issues.append({
+                'category': 'Performance',
+                'severity': 'HIGH',
+                'issue': 'SELECT * Without WHERE Clause',
+                'impact': 'Full table scan on potentially large table',
+                'recommendation': 'Always filter with WHERE and specify columns explicitly',
+                'example': '''
+-- BAD:
+SELECT * FROM HugeTable
+-- GOOD:
+SELECT Col1, Col2 FROM HugeTable WHERE Id > 1000
+                '''.strip()
+            })
+        
+        return issues
+    
+    def detect_multiple_table_scans(self, sql_text: str) -> List[Dict]:
+        """Detect multiple SELECTs that could indicate table scans."""
+        issues = []
+        
+        # Count SELECT statements
+        select_count = len(re.findall(r'\bSELECT\b', sql_text, re.IGNORECASE))
+        
+        # If many SELECT statements with COUNT(*), likely multiple scans
+        count_star = len(re.findall(r'SELECT\s+COUNT\s*\(\s*\*\s*\)', sql_text, re.IGNORECASE))
+        
+        if count_star >= 3:
+            issues.append({
+                'category': 'Performance',
+                'severity': 'MEDIUM',
+                'issue': f'Multiple COUNT(*) Queries ({count_star} found)',
+                'impact': 'Multiple table scans can be expensive',
+                'recommendation': 'Consider combining queries or using temporary results',
+                'example': '''
+-- BAD:
+SELECT COUNT(*) FROM Table1;
+SELECT COUNT(*) FROM Table2;
+SELECT COUNT(*) FROM Table3;
+-- BETTER:
+SELECT 
+    (SELECT COUNT(*) FROM Table1) AS Count1,
+    (SELECT COUNT(*) FROM Table2) AS Count2,
+    (SELECT COUNT(*) FROM Table3) AS Count3
                 '''.strip()
             })
         
