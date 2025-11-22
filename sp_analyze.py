@@ -30,10 +30,14 @@ from export.junit_exporter import JUnitExporter
 from testing.test_data_generator import TestDataGenerator
 from testing.table_mocker import TableMocker
 
+sys.path.insert(0, str(Path(__file__).parent / 'src' / 'core'))
+from logger import setup_logging, get_logger
+
 class SPAnalyzer:
     """Main analyzer orchestrator."""
     
     def __init__(self, include_risk_scoring=False):
+        self.logger = get_logger(__name__)
         self.text_parser = TSQLTextParser()
         self.cf_extractor = ControlFlowExtractor()
         self.security_analyzer = SecurityAnalyzer()
@@ -42,78 +46,121 @@ class SPAnalyzer:
         self.risk_scorer = RiskScorer() if include_risk_scoring else None
     
     def analyze_file(self, filepath: str) -> dict:
-        """Comprehensive analysis of a single SP file."""
-        with open(filepath, 'r', encoding='utf-8') as f:
-            sql_text = f.read()
+        """Comprehensive analysis of a single SP file with error handling."""
+        try:
+            self.logger.info(f"Analyzing file: {filepath}")
+            with open(filepath, 'r', encoding='utf-8') as f:
+                sql_text = f.read()
+            
+            result = self.analyze_text(sql_text, filepath)
+            self.logger.info(f"Analysis completed successfully: {filepath}")
+            return result
         
-        return self.analyze_text(sql_text, filepath)
+        except FileNotFoundError:
+            self.logger.error(f"File not found: {filepath}")
+            return self._error_result(filepath, "File not found")
+        
+        except UnicodeDecodeError as e:
+            self.logger.error(f"Encoding error in {filepath}: {e}")
+            return self._error_result(filepath, f"Invalid file encoding: {e}")
+        
+        except PermissionError:
+            self.logger.error(f"Permission denied: {filepath}")
+            return self._error_result(filepath, "Permission denied")
+        
+        except Exception as e:
+            self.logger.exception(f"Unexpected error analyzing {filepath}")
+            return self._error_result(filepath, f"Analysis failed: {str(e)}")
     
     def analyze_text(self, sql_text: str, source: str = "unknown") -> dict:
-        """Analyze SQL text and return comprehensive results."""
-        # Basic parsing
-        basic_info = self.text_parser.parse(sql_text)
-        sp_name = basic_info['name']
-        
-        # Control flow
-        control_flow = self.cf_extractor.extract_all(sql_text)
-        
-        # CFG and path analysis
-        builder = CFGBuilder()
-        cfg = builder.build_from_source(sql_text)
-        
-        path_analyzer = PathAnalyzer()
-        unreachable = path_analyzer.detect_unreachable(cfg)
-        infinite_loops = path_analyzer.detect_infinite_loops(cfg)
-        
-        # Complexity
-        explainer = LogicExplainer()
-        complexity = explainer.summarize_control_flow(cfg)
-        
-        # Security analysis
-        security = self.security_analyzer.analyze(sql_text)
-        security['score'] = self.security_analyzer.get_security_score(sql_text)
-        
-        # Quality analysis
-        quality = self.quality_analyzer.analyze(sql_text, sp_name)
-        
-        # Performance analysis (NEW!)
-        performance = self.performance_analyzer.analyze(sql_text)
-        
-        # Build result dictionary
-        result = {
-            'source': source,
-            'sp_name': sp_name,
-            'basic': basic_info,
-            'control_flow': control_flow,
-            'cfg_nodes': len(cfg.nodes),
-            'unreachable_blocks': len(unreachable),
-            'infinite_loops': len(infinite_loops),
-            'complexity': complexity,
-            'security': security,
-            'quality': quality,
-            'performance': performance,
-            'dependencies': {
-                'tables': basic_info['tables'],
-                'procedures': basic_info['exec_calls']
-            }
-        }
-        
-        # Risk assessment (optional)
-        if self.risk_scorer:
-            # Prepare analysis data for risk scorer
-            analysis_data = {
-                'procedure_name': sp_name,
-                'parameters': basic_info['parameters'],
-                'tables': basic_info['tables'],
-                'lines_of_code': basic_info['lines_of_code'],
-                'has_try_catch': basic_info.get('has_try_catch', False),
+        """Analyze SQL text and return comprehensive results with error handling."""
+        try:
+            self.logger.debug(f"Starting analysis for: {source}")
+            
+            # Basic parsing
+            basic_info = self.text_parser.parse(sql_text)
+            sp_name = basic_info['name']
+            
+            # Control flow
+            control_flow = self.cf_extractor.extract_all(sql_text)
+            
+            # CFG and path analysis
+            builder = CFGBuilder()
+            cfg = builder.build_from_source(sql_text)
+            
+            path_analyzer = PathAnalyzer()
+            unreachable = path_analyzer.detect_unreachable(cfg)
+            infinite_loops = path_analyzer.detect_infinite_loops(cfg)
+            
+            # Complexity
+            explainer = LogicExplainer()
+            complexity = explainer.summarize_control_flow(cfg)
+            
+            # Security analysis
+            security = self.security_analyzer.analyze(sql_text)
+            security['score'] = self.security_analyzer.get_security_score(sql_text)
+            
+            # Quality analysis
+            quality = self.quality_analyzer.analyze(sql_text, sp_name)
+            
+            # Performance analysis
+            performance = self.performance_analyzer.analyze(sql_text)
+            
+            # Build result dictionary
+            result = {
+                'success': True,
+                'source': source,
+                'sp_name': sp_name,
+                'basic': basic_info,
+                'control_flow': control_flow,
+                'cfg_nodes': len(cfg.nodes),
+                'unreachable_blocks': len(unreachable),
+                'infinite_loops': len(infinite_loops),
+                'complexity': complexity,
                 'security': security,
                 'quality': quality,
-                'performance': performance
+                'performance': performance,
+                'dependencies': {
+                    'tables': basic_info['tables'],
+                    'procedures': basic_info['exec_calls']
+                }
             }
-            result['risk_assessment'] = self.risk_scorer.calculate_risk_score(analysis_data)
         
-        return result
+            # Risk assessment (optional)
+            if self.risk_scorer:
+                # Prepare analysis data for risk scorer
+                analysis_data = {
+                    'procedure_name': sp_name,
+                    'parameters': basic_info['parameters'],
+                    'tables': basic_info['tables'],
+                    'lines_of_code': basic_info['lines_of_code'],
+                    'has_try_catch': basic_info.get('has_try_catch', False),
+                    'security': security,
+                    'quality': quality,
+                    'performance': performance
+                }
+                result['risk_assessment'] = self.risk_scorer.calculate_risk_score(analysis_data)
+            
+            return result
+        
+        except Exception as e:
+            self.logger.exception(f"Error during analysis of {source}")
+            return self._error_result(source, f"Analysis failed: {str(e)}")
+    
+    def _error_result(self, source: str, error_msg: str) -> dict:
+        """Return partial result when analysis fails"""
+        return {
+            'success': False,
+            'source': source,
+            'error': error_msg,
+            'sp_name': 'UNKNOWN',
+            'basic': {},
+            'security': {'score': 0, 'sql_injection_risks': [], 'permission_issues': [], 'security_warnings': []},
+            'quality': {'grade': 'F', 'quality_score': 0, 'issues': []},
+            'performance': {'grade': 'F', 'performance_score': 0, 'issues': []},
+            'complexity': {'complexity': 0},
+            'dependencies': {'tables': [], 'procedures': []}
+        }
 
 def analyze_command(args):
     """Enhanced analyze command with all features."""
