@@ -16,7 +16,7 @@ def main():
     print("="*70)
     
     # Example 1: Email parameter
-    print("\n📧 Example 1: Email Parameter (VARCHAR(100))")
+    print("\n Example 1: Email Parameter (VARCHAR(100))")
     print("-" * 70)
     email_param = {'name': '@Email', 'type': 'VARCHAR(100)'}
     email_data = gen.generate_test_values(email_param)
@@ -28,7 +28,7 @@ def main():
     print(f"Invalid Values: {email_data['invalid'][:1]}")
     
     # Example 2: Integer ID
-    print("\n\n🔢 Example 2: User ID (INT)")
+    print("\n\n Example 2: User ID (INT)")
     print("-" * 70)
     id_param = {'name': '@UserId', 'type': 'INT'}
     id_data = gen.generate_test_values(id_param)
@@ -40,7 +40,7 @@ def main():
     print(f"Invalid Values (Overflow): {id_data['invalid'][:2]}")
     
     # Example 3: Date
-    print("\n\n📅 Example 3: Order Date (DATETIME)")
+    print("\n\n Example 3: Order Date (DATETIME)")
     print("-" * 70)
     date_param = {'name': '@OrderDate', 'type': 'DATETIME'}
     date_data = gen.generate_test_values(date_param)
@@ -51,7 +51,7 @@ def main():
     print(f"Invalid Values (Bad Dates): {date_data['invalid']}")
     
     # Example 4: Decimal
-    print("\n\n💰 Example 4: Price (DECIMAL(18,2))")
+    print("\n\n Example 4: Price (DECIMAL(18,2))")
     print("-" * 70)
     price_param = {'name': '@Price', 'type': 'DECIMAL(18,2)'}
     price_data = gen.generate_test_values(price_param)
@@ -61,14 +61,14 @@ def main():
     print(f"Boundary Values: {price_data['boundary']}")
     
     print("\n" + "="*70)
-    print("✅ Ready for QA Testing!")
+    print(" Ready for QA Testing!")
     print("="*70)
     print("\nBenefits:")
-    print("  ✓ Boundary value analysis (MIN/MAX)")
-    print("  ✓ SQL injection test cases")
-    print("  ✓ NULL and edge case handling")
-    print("  ✓ Realistic test data")
-    print("  ✓ Positive AND negative testing")
+    print("  - Boundary value analysis (MIN/MAX)")
+    print("  - SQL injection test cases")
+    print("  - NULL and edge case handling")
+    print("  - Realistic test data")
+    print("  - Positive AND negative testing")
 
 
 if __name__ == '__main__':

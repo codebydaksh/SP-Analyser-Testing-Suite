@@ -56,3 +56,18 @@ antlr-*.jar
 grammar/*.tokens
 grammar/*.interp
 .vercel
+
+# Analysis outputs (DO NOT COMMIT)
+*_analysis.json
+*_report.html
+*_report.md
+
+# Demo outputs
+demo_*.xml
+unified-qa-demo-results.xml
+
+# Test outputs
+junit-results.xml
+
+# Summary files
+demo_summary.csv

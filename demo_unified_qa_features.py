@@ -112,7 +112,7 @@ def main():
     print("-" * 80)
     
     exporter = JUnitExporter()
-    junit_xml = exporter.export_to_xml(sp_analysis)
+    junit_xml = exporter.export_analysis_as_tests(sp_analysis)
     
     print("Generated JUnit XML for CI/CD integration:")
     print(junit_xml[:300] + "..." if len(junit_xml) > 300 else junit_xml)

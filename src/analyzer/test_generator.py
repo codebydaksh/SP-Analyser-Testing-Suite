@@ -1,5 +1,6 @@
 """
 Unit Test Generator for T-SQL Stored Procedures
+Enhanced with TableMocker and TestDataGenerator support
 """
 from sqlglot import exp
 from typing import List, Dict, Any
@@ -8,9 +9,19 @@ class SPTestGenerator:
     """
     Generates unit tests for T-SQL stored procedures.
     Supports tSQLt and SSDT formats.
+    Enhanced mode includes table mocking and comprehensive test data.
     """
-    def __init__(self):
-        pass
+    def __init__(self, use_enhanced_features=False):
+        self.use_enhanced_features = use_enhanced_features
+        
+        if use_enhanced_features:
+            from testing.test_data_generator import TestDataGenerator
+            from testing.table_mocker import TableMocker
+            self.test_data_gen = TestDataGenerator()
+            self.table_mocker = TableMocker()
+        else:
+            self.test_data_gen = None
+            self.table_mocker = None
 
     def extract_parameters(self, ast) -> List[Dict[str, Any]]:
         """
@@ -47,7 +58,7 @@ class SPTestGenerator:
                     
         return parameters
 
-    def generate_tsqlt_tests(self, proc_name: str, parameters: List[Dict[str, Any]]) -> str:
+    def generate_tsqlt_tests(self, proc_name: str, parameters: List[Dict[str, Any]], tables: List[str] = None) -> str:
         """Generate tSQLt test suite for the given stored procedure."""
         test_class = f"Test{proc_name.replace('.', '_')}"
         
@@ -55,14 +66,37 @@ class SPTestGenerator:
         tests.append(f"EXEC tSQLt.NewTestClass '{test_class}';")
         tests.append("GO\n")
         
-        # Test 1: Basic execution
+        # Enhanced mode: Add table mocking setup
+        if self.use_enhanced_features and self.table_mocker and tables:
+            tests.append(f"-- Setup: Table Mocking")
+            tests.append(f"CREATE PROCEDURE [{test_class}].[SetUp]")
+            tests.append("AS")
+            tests.append("BEGIN")
+            fake_calls = self.table_mocker.generate_fake_table_calls(tables)
+            for call in fake_calls:
+                tests.append(f"    {call}")
+            tests.append("END;")
+            tests.append("GO\n")
+        
+        # Test 1: Basic execution with valid data
         tests.append(f"CREATE PROCEDURE [{test_class}].[test_BasicExecution]")
         tests.append("AS")
         tests.append("BEGIN")
         tests.append(f"    -- Arrange")
         tests.append(f"    -- Act")
-        param_values = ", ".join([self._get_default_value(p) for p in parameters])
-        tests.append(f"    EXEC {proc_name} {param_values};")
+        
+        if self.use_enhanced_features and self.test_data_gen:
+            # Use first valid test value from TestDataGenerator
+            param_values = []
+            for p in parameters:
+                test_data = self.test_data_gen.generate_test_values(p)
+                val = test_data['valid'][0] if test_data['valid'] else self._get_default_value(p)
+                param_values.append(str(val))
+            param_str = ", ".join(param_values)
+        else:
+            param_str = ", ".join([self._get_default_value(p) for p in parameters])
+        
+        tests.append(f"    EXEC {proc_name} {param_str};")
         tests.append(f"    -- Assert")
         tests.append(f"    -- Add assertions here")
         tests.append("END;")
@@ -76,6 +110,35 @@ class SPTestGenerator:
             tests.append(f"    -- Test with NULL parameters")
             null_params = ", ".join(["NULL" for _ in parameters])
             tests.append(f"    EXEC {proc_name} {null_params};")
+            tests.append("END;")
+            tests.append("GO\n")
+        
+        # Enhanced mode: Add boundary value tests
+        if self.use_enhanced_features and self.test_data_gen and parameters:
+            tests.append(f"CREATE PROCEDURE [{test_class}].[test_BoundaryValues]")
+            tests.append("AS")
+            tests.append("BEGIN")
+            tests.append(f"    -- Test with boundary values")
+            for p in parameters:
+                test_data = self.test_data_gen.generate_test_values(p)
+                if test_data['boundary']:
+                    boundary_val = test_data['boundary'][0]
+                    tests.append(f"    -- Testing {p['name']} with boundary value: {boundary_val}")
+            tests.append("END;")
+            tests.append("GO\n")
+            
+            # SQL Injection test
+            tests.append(f"CREATE PROCEDURE [{test_class}].[test_SQLInjectionProtection]")
+            tests.append("AS")
+            tests.append("BEGIN")
+            tests.append(f"    -- Test SQL injection protection")
+            for p in parameters:
+                if 'VARCHAR' in p['type'].upper() or 'CHAR' in p['type'].upper():
+                    test_data = self.test_data_gen.generate_test_values(p)
+                    if test_data['invalid']:
+                        injection_val = test_data['invalid'][0]
+                        tests.append(f"    -- Testing {p['name']} with: {injection_val[:50]}...")
+            tests.append(f"    -- Expect: Should not execute injected SQL")
             tests.append("END;")
             tests.append("GO\n")
         

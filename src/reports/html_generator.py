@@ -124,8 +124,8 @@ class HTMLReportGenerator:
         
         return f"""
         <div class="section">
-            <div class="section-title">🔒 Security Analysis</div>
-            {issues_html if issues_html else '<p class="good">✓ No security issues detected</p>'}
+            <div class="section-title"> Security Analysis</div>
+            {issues_html if issues_html else '<p class="good">No security issues detected</p>'}
         </div>
         """
     
@@ -154,7 +154,7 @@ class HTMLReportGenerator:
                 <span class="grade">{quality.get('grade', 'N/A')}</span>
                 <span style="margin-left: 20px; font-size: 1.2em;">Score: {quality.get('quality_score', 0)}/100</span>
             </div>
-            {issues_html if issues_html else '<p class="good">✓ No quality issues detected</p>'}
+            {issues_html if issues_html else '<p class="good">No quality issues detected</p>'}
         </div>
         """
     
@@ -186,7 +186,7 @@ class HTMLReportGenerator:
         
         return f"""
         <div class="section">
-            <div class="section-title">🔗 Dependencies</div>
+            <div class="section-title"> Dependencies</div>
             <table>
                 <tr><th>Type</th><th>Dependencies</th></tr>
                 <tr><td><strong>Tables</strong></td><td>{tables_html}</td></tr>

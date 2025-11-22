@@ -1,4 +1,4 @@
-# 🚀 Vercel Deployment Guide
+# Vercel Deployment Guide
 
 ## Quick Deploy Steps
 
@@ -81,10 +81,10 @@ No environment variables required for basic deployment.
 
 ## Files Created for Vercel:
 
-✅ `vercel.json` - Vercel configuration
-✅ `api/analyze.py` - Serverless function endpoint
-✅ `.gitignore` - Excludes generated files
-✅ `requirements.txt` - Python dependencies
+- `vercel.json` - Vercel configuration
+- `api/analyze.py` - Serverless function endpoint
+- `.gitignore` - Excludes generated files
+- `requirements.txt` - Python dependencies
 
 ---
 
@@ -100,14 +100,14 @@ Then visit: `http://localhost:3000/api/analyze`
 
 ---
 
-## 🎉 You're Ready to Deploy!
+## You're Ready to Deploy!
 
 Your world-class T-SQL analyzer is production-ready with:
-- ✅ 101/107 tests passing (94%)
-- ✅ Security analysis (100/100 scores)
-- ✅ Quality grading (A-F)
-- ✅ Performance analysis
-- ✅ Batch processing
-- ✅ Multiple export formats
+- 106/107 tests passing (99%)
+- Security analysis (100/100 scores)
+- Quality grading (A-F)
+- Performance analysis
+- Batch processing
+- Multiple export formats
 
-**Now push to GitHub and deploy to Vercel!** 🚀
+**Now push to GitHub and deploy to Vercel!**

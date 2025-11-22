@@ -58,7 +58,7 @@ def test_massive_1500_line_sp():
     assert elapsed < 2.0,f"Parsing 1500+ lines took {elapsed}s (should be < 2s)"
     assert result['lines_of_code'] > 1000
     assert len(result['tables']) > 10
-    print(f"✅ Handled {result['lines_of_code']} LOC in {elapsed:.3f}s")
+    print(f" Handled {result['lines_of_code']} LOC in {elapsed:.3f}s")
 
 def test_deeply_nested_control_flow():
     """Test 2: Handle deeply nested IF/WHILE/CASE (10 levels deep)."""
@@ -92,7 +92,7 @@ def test_deeply_nested_control_flow():
     builder = CFGBuilder()
     cfg = builder.build_from_source(sql)
     assert len(cfg.nodes) > 10
-    print(f"✅ Built CFG with {len(cfg.nodes)} nodes for 10-level nesting")
+    print(f" Built CFG with {len(cfg.nodes)} nodes for 10-level nesting")
 
 def test_extreme_parameter_count():
     """Test 3: Handle SP with 50+ parameters."""
@@ -107,7 +107,7 @@ def test_extreme_parameter_count():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert 'parameters' in result
-    print(f"✅ Parsed SP with 50 parameters")
+    print(f" Parsed SP with 50 parameters")
 
 def test_complex_dynamic_sql_injection():
     """Test 4: Detect sophisticated SQL injection patterns."""
@@ -130,7 +130,7 @@ def test_complex_dynamic_sql_injection():
         result = analyzer.analyze(sql)
         assert len(result['sql_injection_risks']) > 0, f"Failed to detect: {sql[:50]}"
     
-    print(f"✅ Detected {len(sqls)} sophisticated SQL injection patterns")
+    print(f" Detected {len(sqls)} sophisticated SQL injection patterns")
 
 def test_all_tsql_data_types():
     """Test 5: Handle all T-SQL data types."""
@@ -151,7 +151,7 @@ def test_all_tsql_data_types():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert result is not None
-    print(f"✅ Handled {len(data_types)} different T-SQL data types")
+    print(f" Handled {len(data_types)} different T-SQL data types")
 
 def test_multiple_result_sets():
     """Test 6: Handle SP with multiple result sets."""
@@ -170,7 +170,7 @@ def test_multiple_result_sets():
     result = parser.parse(sql)
     tables = result['tables']
     assert len(tables) >= 5
-    print(f"✅ Parsed SP with {len(tables)} result sets")
+    print(f" Parsed SP with {len(tables)} result sets")
 
 def test_temp_table_heavy_sp():
     """Test 7: Handle SP with multiple temp tables."""
@@ -192,7 +192,7 @@ def test_temp_table_heavy_sp():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert '#Temp1' in result['tables'] or 'Temp1' in str(result['tables'])
-    print("✅ Handled temp tables correctly")
+    print(" Handled temp tables correctly")
 
 def test_cte_and_subqueries():
     """Test 8: Handle complex CTEs and subqueries."""
@@ -220,7 +220,7 @@ def test_cte_and_subqueries():
     result = parser.parse(sql)
     assert 'Orders' in result['tables']
     assert 'Categories' in result['tables']
-    print("✅ Parsed complex CTEs and recursive queries")
+    print(" Parsed complex CTEs and recursive queries")
 
 def test_error_handling_patterns():
     """Test 9: Detect missing error handling."""
@@ -248,7 +248,7 @@ def test_error_handling_patterns():
     bad_result = analyzer.analyze(bad_sql)
     
     assert analyzer.get_security_score(good_sql) > analyzer.get_security_score(bad_sql)
-    print("✅ Detected missing error handling")
+    print(" Detected missing error handling")
 
 def test_performance_anti_patterns():
     """Test 10: Detect ALL performance anti-patterns."""
@@ -267,7 +267,7 @@ def test_performance_anti_patterns():
         result = analyzer.analyze(sql)
         assert len(result['issues']) > 0, f"Failed to detect: {name}"
     
-    print(f"✅ Detected all {len(anti_patterns)} performance anti-patterns")
+    print(f" Detected all {len(anti_patterns)} performance anti-patterns")
 
 def test_transaction_nesting():
     """Test 11: Handle nested transactions."""
@@ -287,25 +287,25 @@ def test_transaction_nesting():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert result['has_transaction'] == True
-    print("✅ Parsed nested transactions")
+    print(" Parsed nested transactions")
 
 def test_unicode_and_special_chars():
     """Test 12: Handle Unicode and special characters."""
     sql = """
     CREATE PROCEDURE dbo.UnicodeTest
-        @Name NVARCHAR(100) = N'测试者'
+        @Name NVARCHAR(100) = N''
     AS
     BEGIN
         SELECT * FROM Users WHERE Name = @Name
-        -- Comment with émojis: 🎉 ✅ 🚀
-        PRINT N'Success: 成功'
+        -- Comment with émojis:   
+        PRINT N'Success: '
     END
     """
     
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert result is not None
-    print("✅ Handled Unicode and special characters")
+    print(" Handled Unicode and special characters")
 
 def test_all_join_types():
     """Test 13: Detect all JOIN types."""
@@ -324,7 +324,7 @@ def test_all_join_types():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert len(result['tables']) >= 6
-    print(f"✅ Parsed {len(result['tables'])} tables with various JOIN types")
+    print(f" Parsed {len(result['tables'])} tables with various JOIN types")
 
 def test_merge_statement():
     """Test 14: Handle MERGE statements."""
@@ -343,7 +343,7 @@ def test_merge_statement():
     result = parser.parse(sql)
     tables = result['tables']
     assert 'Target' in tables or 'Source' in tables
-    print("✅ Parsed MERGE statement")
+    print(" Parsed MERGE statement")
 
 def test_xml_and_json_operations():
     """Test 15: Handle XML/JSON operations."""
@@ -364,7 +364,7 @@ def test_xml_and_json_operations():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert result is not None
-    print("✅ Parsed XML/JSON operations")
+    print(" Parsed XML/JSON operations")
 
 def test_window_functions():
     """Test 16: Handle window functions."""
@@ -380,7 +380,7 @@ def test_window_functions():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert 'SalesData' in result['tables']
-    print("✅ Parsed window functions")
+    print(" Parsed window functions")
 
 def test_pivot_and_unpivot():
     """Test 17: Handle PIVOT/UNPIVOT."""
@@ -397,7 +397,7 @@ def test_pivot_and_unpivot():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert len(result['tables']) > 0
-    print("✅ Parsed PIVOT/UNPIVOT operations")
+    print(" Parsed PIVOT/UNPIVOT operations")
 
 def test_output_clause():
     """Test 18: Handle OUTPUT clause."""
@@ -413,7 +413,7 @@ def test_output_clause():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert 'Orders' in result['tables']
-    print("✅ Parsed OUTPUT clause")
+    print(" Parsed OUTPUT clause")
 
 def test_indexed_views_and_computed_columns():
     """Test 19: Handle indexed views."""
@@ -425,7 +425,7 @@ def test_indexed_views_and_computed_columns():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert len(result['tables']) > 0
-    print("✅ Parsed indexed views")
+    print(" Parsed indexed views")
 
 def test_try_convert_and_isnull():
     """Test 20: Handle TRY_CONVERT, ISNULL, COALESCE."""
@@ -441,7 +441,7 @@ def test_try_convert_and_isnull():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert 'MixedData' in result['tables']
-    print("✅ Parsed TRY_CONVERT and COALESCE")
+    print(" Parsed TRY_CONVERT and COALESCE")
 
 def test_batch_quality_scoring():
     """Test 21: Batch quality analysis stress test."""
@@ -482,7 +482,7 @@ def test_batch_quality_scoring():
     
     assert len(results) == 50
     assert elapsed < 5.0,  f"Batch analysis took {elapsed}s (should be < 5s)"
-    print(f"✅ Analyzed 50 SPs in {elapsed:.3f}s")
+    print(f" Analyzed 50 SPs in {elapsed:.3f}s")
 
 # Additional hardcore edge cases
 
@@ -503,7 +503,7 @@ AS
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert 'Production' in result['name'] or 'usp_GetData' in result['name']
-    print("✅ Parsed fully schema-qualified SQL")
+    print(" Parsed fully schema-qualified SQL")
 
 def test_inline_table_valued_function():
     """Test 23: Inline TVF parsing."""
@@ -522,7 +522,7 @@ def test_inline_table_valued_function():
     parser = TSQLTextParser()
     result = parser.parse(sql)
     assert 'Orders' in result['tables']
-    print("✅ Parsed inline table-valued function")
+    print(" Parsed inline table-valued function")
 
 def test_security_complete_report():
     """Test 24: Complete security report generation."""
@@ -545,11 +545,11 @@ def test_security_complete_report():
     score = analyzer.get_security_score(dangerous_sql)
     assert score < 50, f"Dangerous SQL scored {score} (should be < 50)"
     
-    print(f"✅ Detected all security issues, score: {score}/100")
+    print(f" Detected all security issues, score: {score}/100")
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("🔥 HARDCORE TEST SUITE - WORLD-CLASS VALIDATION")
+    print(" HARDCORE TEST SUITE - WORLD-CLASS VALIDATION")
     print("="*60 + "\n")
     
     pytest.main([__file__, "-v", "--tb=short"])

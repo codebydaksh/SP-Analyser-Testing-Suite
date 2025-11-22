@@ -54,16 +54,16 @@ class RiskScorer:
         # Determine risk level
         if risk_points >= 30:
             risk_level = 'CRITICAL'
-            recommendation = '🚨 HIGH PRIORITY: Intensive testing required. Consider code review before deployment.'
+            recommendation = ' HIGH PRIORITY: Intensive testing required. Consider code review before deployment.'
         elif risk_points >= 15:
             risk_level = 'HIGH'
-            recommendation = '⚠️  ELEVATED RISK: Thorough testing recommended. Focus on edge cases.'
+            recommendation = '  ELEVATED RISK: Thorough testing recommended. Focus on edge cases.'
         elif risk_points >= 8:
             risk_level = 'MEDIUM'
-            recommendation = '⚡ MODERATE RISK: Standard testing procedures apply.'
+            recommendation = ' MODERATE RISK: Standard testing procedures apply.'
         else:
             risk_level = 'LOW'
-            recommendation = '✅ LOW RISK: Basic smoke testing sufficient.'
+            recommendation = ' LOW RISK: Basic smoke testing sufficient.'
         
         return {
             'risk_score': risk_points,

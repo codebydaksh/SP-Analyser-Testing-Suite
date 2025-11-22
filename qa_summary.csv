@@ -1,0 +1,7 @@
+Procedure Name,File,LOC,Security Score,Quality Grade,Quality Score,Performance Score,Complexity,Tables,Procedures,Security Issues,Quality Issues,Performance Issues,Status
+dbo,examples\usp_ProcessCustomerOrder.sql,161,100,A,100,100,8,9,3,0,1,0,PASS
+dbo,examples\usp_ProcessPayment.sql,38,100,A,99,100,0,1,1,0,2,0,PASS
+dbo,examples\usp_RecordAccountingEntry.sql,50,100,A,99,100,1,3,0,0,2,0,PASS
+dbo,examples\usp_SendOrderNotification.sql,43,100,A,99,100,2,1,0,0,2,0,PASS
+dbo,examples\usp_UpdateCustomerStats.sql,46,100,A,100,100,1,4,1,0,1,0,PASS
+dbo,examples\usp_UpdateCustomerTier.sql,37,100,A,99,100,1,3,0,0,2,0,PASS

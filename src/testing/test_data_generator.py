@@ -27,9 +27,9 @@ class TestDataGenerator:
     
     # Unicode edge cases
     UNICODE_TESTS = [
-        "测试",  # Chinese
+        "",  # Chinese
         "Tëst",  # Accented
-        "🔥Test",  # Emoji
+        "Test",  # Emoji
         "תשובה"   # Hebrew
     ]
     

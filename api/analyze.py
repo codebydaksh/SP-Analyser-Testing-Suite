@@ -349,15 +349,6 @@ class handler(BaseHTTPRequestHandler):
             exec_proc_name = f"[{clean_proc_name}]"
         
         tests = []
-        tests.append("-- ===========================================")
-        tests.append(f"-- WORLD-CLASS tSQLt Unit Tests for {clean_proc_name}")
-        tests.append("-- Auto-generated with:")
-        tests.append("--   ✓ Parameter validation")
-        tests.append("--   ✓ tSQLt.AssertEquals real assertions")
-        tests.append("--   ✓ NULL boundary testing")
-        tests.append("--   ✓ Error handling with TRY/CATCH")
-        tests.append("-- ===========================================\n")
-        
         tests.append(f"EXEC tSQLt.NewTestClass '{test_class}';")
         tests.append("GO\n")
         

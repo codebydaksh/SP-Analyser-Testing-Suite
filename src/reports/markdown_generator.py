@@ -27,7 +27,7 @@ class MarkdownReportGenerator:
         lines.append("\n")
         
         # Dependencies
-        lines.append("## 🔗 Dependencies\n")
+        lines.append("##  Dependencies\n")
         deps = analysis_data.get('dependencies', {})
         lines.append(f"**Tables:** {len(deps.get('tables', []))}")
         for table in deps.get('tables', []):
@@ -40,7 +40,7 @@ class MarkdownReportGenerator:
         # Security Issues
         security = analysis_data.get('security', {})
         if security.get('sql_injection_risks') or security.get('permission_issues'):
-            lines.append("## 🔒 Security Issues\n")
+            lines.append("##  Security Issues\n")
             for issue in security.get('sql_injection_risks', []):
                 lines.append(f"### {issue['type']} [{issue['severity']}]")
                 lines.append(f"> {issue['message']}")

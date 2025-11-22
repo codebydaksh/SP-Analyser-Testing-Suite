@@ -31,7 +31,7 @@ def test_integer_data_generation():
     # NULL should be in edge cases
     assert 'NULL' in result['edge_cases']
     
-    print("✅ Integer data generation works!")
+    print(" Integer data generation works!")
 
 
 def test_string_data_generation():
@@ -51,7 +51,7 @@ def test_string_data_generation():
     # Should include empty string
     assert "''" in result['boundary']
     
-    print("✅ String data generation works!")
+    print(" String data generation works!")
 
 
 def test_datetime_data_generation():
@@ -68,7 +68,7 @@ def test_datetime_data_generation():
     # Should include invalid dates
     assert len(result['invalid']) > 0
     
-    print("✅ Datetime data generation works!")
+    print(" Datetime data generation works!")
 
 
 def test_realistic_value_generation():
@@ -87,7 +87,7 @@ def test_realistic_value_generation():
     date_param = {'name': '@OrderDate', 'type': 'DATETIME'}
     assert "'2024" in gen.get_realistic_value(date_param)
     
-    print("✅ Realistic value generation works!")
+    print(" Realistic value generation works!")
 
 
 def test_boundary_value_analysis():
@@ -101,7 +101,7 @@ def test_boundary_value_analysis():
     assert -32768 in result['boundary']  # SMALLINT MIN
     assert 32767 in result['boundary']   # SMALLINT MAX
     
-    print("✅ Boundary value analysis works!")
+    print(" Boundary value analysis works!")
 
 
 if __name__ == '__main__':
@@ -113,4 +113,4 @@ if __name__ == '__main__':
     test_realistic_value_generation()
     test_boundary_value_analysis()
     
-    print("\n🎉 All tests passed! TestDataGenerator is working correctly.")
+    print("\n All tests passed! TestDataGenerator is working correctly.")

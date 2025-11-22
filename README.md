@@ -166,11 +166,11 @@ python sp_analyze.py test my_sp.sql --format tsqlt -o tests.sql
 ```
 13 tests passed in 0.40s
 
-✓ Parser tests (2)
-✓ Dependency resolver (2)
-✓ CFG builder (2)
-✓ Test generator (3)
-✓ Analyzer tests (4)
+- Parser tests (2)
+- Dependency resolver (2)
+- CFG builder (2)
+- Test generator (3)
+- Analyzer tests (4)
 ```
 
 ## 🌟 What Makes This World-Class?

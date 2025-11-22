@@ -93,7 +93,7 @@ def test_real_world_2000_line_monster():
     assert elapsed < 3.0, f"2000-line SP took {elapsed}s (should be < 3s)"
     assert result['lines_of_code'] > 1500
     assert len(result['tables']) > 20
-    print(f"✅ MONSTER: {result['lines_of_code']} LOC, {len(result['tables'])} tables in {elapsed:.3f}s")
+    print(f" MONSTER: {result['lines_of_code']} LOC, {len(result['tables'])} tables in {elapsed:.3f}s")
 
 def test_sql_injection_obfuscation_techniques():
     """EXTREME 2: Detect sophisticated obfuscation."""
@@ -124,7 +124,7 @@ def test_sql_injection_obfuscation_techniques():
     
     # Should detect at least 80% of obfuscation techniques
     assert detected >= 4, f"Only detected {detected}/5 advanced injections"
-    print(f"✅ Detected {detected}/5 sophisticated SQL injection obfuscations")
+    print(f" Detected {detected}/5 sophisticated SQL injection obfuscations")
 
 def test_concurrent_batch_stress():
     """EXTREME 3: Simulate 100 concurrent SP analyses."""
@@ -153,7 +153,7 @@ def test_concurrent_batch_stress():
     
     # Should complete 100 full analyses in under 10 seconds
     assert elapsed < 10.0, f"100 analyses took {elapsed}s (should be < 10s)"
-    print(f"✅ 100 full analyses completed in {elapsed:.3f}s ({elapsed/100*1000:.1f}ms per SP)")
+    print(f" 100 full analyses completed in {elapsed:.3f}s ({elapsed/100*1000:.1f}ms per SP)")
 
 def test_every_tsql_keyword():
     """EXTREME 4: SP using every major T-SQL keyword."""
@@ -234,7 +234,7 @@ def test_every_tsql_keyword():
     # Should parse without errors
     assert result is not None
     assert result['name'] == 'dbo.KeywordTest'
-    print("✅ Parsed SP using 50+ T-SQL keywords")
+    print(" Parsed SP using 50+ T-SQL keywords")
 
 def test_maximum_complexity_cfg():
     """EXTREME 5: Maximum complexity control flow."""
@@ -266,7 +266,7 @@ def test_maximum_complexity_cfg():
     complexity_result = explainer.summarize_control_flow(cfg)
     
     assert complexity_result['complexity'] > 20
-    print(f"✅ Built CFG with complexity: {complexity_result['complexity']}")
+    print(f" Built CFG with complexity: {complexity_result['complexity']}")
 
 def test_all_security_vulnerabilities_at_once():
     """EXTREME 6: SP with EVERY security issue."""
@@ -320,7 +320,7 @@ def test_all_security_vulnerabilities_at_once():
                    len(result['permission_issues']) + 
                    len(result['security_warnings']))
     
-    print(f"✅ Detected {total_issues} security issues, score: {score}/100")
+    print(f" Detected {total_issues} security issues, score: {score}/100")
 
 def test_performance_nightmare():
     """EXTREME 7: SP with ALL performance anti-patterns."""
@@ -376,7 +376,7 @@ def test_performance_nightmare():
     assert len(result['issues']) >= 5
     assert score < 50
     
-    print(f"✅ Detected {len(result['issues'])} performance issues, score: {score}/100")
+    print(f" Detected {len(result['issues'])} performance issues, score: {score}/100")
 
 def test_quality_perfect_vs_terrible():
     """EXTREME 8: Compare perfect and terrible code quality."""
@@ -443,7 +443,7 @@ def test_quality_perfect_vs_terrible():
     assert terrible_result['quality_score'] < 50
     assert terrible_result['grade'] in ['D', 'F']
     
-    print(f"✅ Perfect: {perfect_result['grade']} ({perfect_result['quality_score']}), " +
+    print(f" Perfect: {perfect_result['grade']} ({perfect_result['quality_score']}), " +
           f"Terrible: {terrible_result['grade']} ({terrible_result['quality_score']})")
 
 def test_all_report_formats_generation():
@@ -502,7 +502,7 @@ def test_all_report_formats_generation():
     assert 'dbo.ReportTest' in md
     assert 'Security Score' in md or 'security' in md.lower()
     
-    print("✅ Generated HTML and Markdown reports successfully")
+    print(" Generated HTML and Markdown reports successfully")
 
 def test_end_to_end_ci_cd_pipeline():
     """EXTREME 10: Complete CI/CD pipeline simulation."""
@@ -577,11 +577,11 @@ def test_end_to_end_ci_cd_pipeline():
     # This SP should pass all gates
     assert gates_passed, f"CI/CD gates failed: {', '.join(reasons)}"
     
-    print(f"✅ CI/CD Pipeline PASSED - Security: {sec_score}, Quality: {qual_result['quality_score']}, Performance: {perf_result['performance_score']}")
+    print(f" CI/CD Pipeline PASSED - Security: {sec_score}, Quality: {qual_result['quality_score']}, Performance: {perf_result['performance_score']}")
 
 if __name__ == "__main__":
     print("\n" + "="*70)
-    print("🔥🔥🔥 EXTREME PRODUCTION VALIDATION SUITE 🔥🔥🔥")
+    print(" EXTREME PRODUCTION VALIDATION SUITE ")
     print("="*70 + "\n")
     
     pytest.main([__file__, "-v", "--tb=short"])

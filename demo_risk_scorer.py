@@ -65,7 +65,7 @@ def main():
     }
     
     # Assess LOW RISK
-    print("\n\n📊 Example 1: Simple Procedure")
+    print("\n\n Example 1: Simple Procedure")
     print("-" * 80)
     print(f"Procedure: {low_risk_sp['procedure_name']}")
     print(f"LOC: {low_risk_sp['lines_of_code']}, Parameters: {len(low_risk_sp['parameters'])}, Tables: {len(low_risk_sp['tables'])}")
@@ -74,7 +74,7 @@ def main():
     print(f"\n{scorer.generate_risk_summary(low_assessment)}")
     
     # Assess HIGH RISK
-    print("\n\n📊 Example 2: Complex High-Risk Procedure")
+    print("\n\n Example 2: Complex High-Risk Procedure")
     print("-" * 80)
     print(f"Procedure: {high_risk_sp['procedure_name']}")
     print(f"LOC: {high_risk_sp['lines_of_code']}, Parameters: {len(high_risk_sp['parameters'])}, Tables: {len(high_risk_sp['tables'])}")
@@ -99,13 +99,13 @@ def main():
         print(f"{i}. [{assessment['risk_level']}] {sp['procedure_name']} (Risk Score: {assessment['risk_score']})")
     
     print("\n" + "="*80)
-    print("✅ Risk-Based Testing Strategy Ready!")
+    print(" Risk-Based Testing Strategy Ready!")
     print("="*80)
     print("\nBenefits for QA:")
-    print("  ✓ Prioritize testing on high-risk procedures")
-    print("  ✓ Allocate resources efficiently")
-    print("  ✓ Identify defect-prone code early")
-    print("  ✓ Data-driven testing decisions")
+    print("  - Prioritize testing on high-risk procedures")
+    print("  - Allocate resources efficiently")
+    print("  - Identify defect-prone code early")
+    print("  - Data-driven testing decisions")
 
 
 if __name__ == '__main__':

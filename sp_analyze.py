@@ -25,16 +25,21 @@ from analyzer.test_generator import SPTestGenerator
 from reports.html_generator import HTMLReportGenerator
 from reports.markdown_generator import MarkdownReportGenerator
 from reports.csv_generator import CSVSummaryGenerator
+from analysis.risk_scorer import RiskScorer
+from export.junit_exporter import JUnitExporter
+from testing.test_data_generator import TestDataGenerator
+from testing.table_mocker import TableMocker
 
 class SPAnalyzer:
     """Main analyzer orchestrator."""
     
-    def __init__(self):
+    def __init__(self, include_risk_scoring=False):
         self.text_parser = TSQLTextParser()
         self.cf_extractor = ControlFlowExtractor()
         self.security_analyzer = SecurityAnalyzer()
         self.quality_analyzer = CodeQualityAnalyzer()
         self.performance_analyzer = PerformanceAnalyzer()
+        self.risk_scorer = RiskScorer() if include_risk_scoring else None
     
     def analyze_file(self, filepath: str) -> dict:
         """Comprehensive analysis of a single SP file."""
@@ -74,7 +79,8 @@ class SPAnalyzer:
         # Performance analysis (NEW!)
         performance = self.performance_analyzer.analyze(sql_text)
         
-        return {
+        # Build result dictionary
+        result = {
             'source': source,
             'sp_name': sp_name,
             'basic': basic_info,
@@ -91,16 +97,33 @@ class SPAnalyzer:
                 'procedures': basic_info['exec_calls']
             }
         }
+        
+        # Risk assessment (optional)
+        if self.risk_scorer:
+            # Prepare analysis data for risk scorer
+            analysis_data = {
+                'procedure_name': sp_name,
+                'parameters': basic_info['parameters'],
+                'tables': basic_info['tables'],
+                'lines_of_code': basic_info['lines_of_code'],
+                'has_try_catch': basic_info.get('has_try_catch', False),
+                'security': security,
+                'quality': quality,
+                'performance': performance
+            }
+            result['risk_assessment'] = self.risk_scorer.calculate_risk_score(analysis_data)
+        
+        return result
 
 def analyze_command(args):
     """Enhanced analyze command with all features."""
-    analyzer = SPAnalyzer()
+    analyzer = SPAnalyzer(include_risk_scoring=args.risk)
     
     # Batch mode or single file
     files = []
     if args.batch:
         files = glob(args.file)
-        print(f"📂 Found {len(files)} files to analyze")
+        print(f"Found {len(files)} files to analyze")
     else:
         files = [args.file]
     
@@ -115,7 +138,7 @@ def analyze_command(args):
             results.append(result)
             
             # Console output
-            print_analysis_summary(result)
+            print_analysis_summary(result, show_risk=args.risk)
             
             # Generate reports
             if args.html:
@@ -146,6 +169,13 @@ def analyze_command(args):
                 viz = Visualizer()
                 dot_file = filepath.replace('.sql', '_cfg.dot')
                 viz.save_dot(cfg, dot_file)
+            
+            # JUnit XML export (NEW!)
+            if args.junit:
+                exporter = JUnitExporter()
+                junit_file = args.junit if len(files) == 1 else filepath.replace('.sql', '_junit.xml')
+                exporter.export_to_file(result, junit_file)
+                print(f"JUnit XML: {junit_file}")
         
         except Exception as e:
             print(f"Error analyzing {filepath}: {e}")
@@ -173,7 +203,7 @@ def analyze_command(args):
     
     return 0
 
-def print_analysis_summary(result: dict):
+def print_analysis_summary(result: dict, show_risk: bool = False):
     """Print concise analysis summary."""
     print("\nANALYSIS SUMMARY")
     print(f"  Procedure: {result['sp_name']}")
@@ -185,15 +215,24 @@ def print_analysis_summary(result: dict):
     print(f"  Performance Score: {result['performance']['performance_score']}/100 ({result['performance']['grade']})")
     print(f"  Complexity: {result['complexity']['complexity']}")
     
-    print("\n🔗 DEPENDENCIES")
+    print("\nDEPENDENCIES")
     print(f"  Tables: {len(result['dependencies']['tables'])}")
     print(f"  Procedures: {len(result['dependencies']['procedures'])}")
     
+    # Risk assessment (if available)
+    if show_risk and 'risk_assessment' in result:
+        risk = result['risk_assessment']
+        risk_label = {'LOW': '[LOW]', 'MEDIUM': '[MEDIUM]', 'HIGH': '[HIGH]', 'CRITICAL': '[CRITICAL]'}
+        print(f"\nRISK ASSESSMENT")
+        print(f"  Risk Level: {risk_label.get(risk['risk_level'], '[UNKNOWN]')} {risk['risk_level']}")
+        print(f"  Risk Score: {risk['risk_score']}/100")
+        print(f"  Recommendation: {risk['recommendation']}")
+    
     # Warnings
     if result['unreachable_blocks'] > 0:
-        print(f"\n⚠️  {result['unreachable_blocks']} unreachable code blocks")
+        print(f"\nWARNING: {result['unreachable_blocks']} unreachable code blocks")
     if result['infinite_loops'] > 0:
-        print(f"⚠️  {result['infinite_loops']} potential infinite loops")
+        print(f"WARNING: {result['infinite_loops']} potential infinite loops")
     
     # Issues summary
     total_issues = len(result['security']['sql_injection_risks']) + \
@@ -201,7 +240,7 @@ def print_analysis_summary(result: dict):
                    len(result['quality']['issues'])
     
     if total_issues > 0:
-        print(f"\n📋 FOUND {total_issues} ISSUES")
+        print(f"\nFOUND {total_issues} ISSUES")
         print("   Run with --html for detailed report")
 
 def print_batch_summary(results: list):
@@ -224,16 +263,21 @@ def test_command(args):
     analyzer = SPAnalyzer()
     result = analyzer.analyze_file(args.file)
     
-    generator = SPTestGenerator()
+    generator = SPTestGenerator(use_enhanced_features=args.enhanced)
     params = result['basic']['parameters']
+    tables = result['dependencies']['tables'] if args.enhanced else None
     
-    tests = generator.generate_tsqlt_tests(result['sp_name'], params) if args.format == 'tsqlt' \
-            else generator.generate_ssdt_tests(result['sp_name'], params)
+    if args.format == 'tsqlt':
+        tests = generator.generate_tsqlt_tests(result['sp_name'], params, tables)
+    else:
+        tests = generator.generate_ssdt_tests(result['sp_name'], params)
     
     if args.output:
-        with open(args.output, 'w') as f:
+        with open(args.output, 'w', encoding='utf-8') as f:
             f.write(tests)
         print(f"Tests saved: {args.output}")
+        if args.enhanced:
+            print("   Enhanced features: - Table mocking - Comprehensive test data")
     else:
         print(tests)
     
@@ -258,6 +302,10 @@ def main():
     analyze.add_argument('--visualize', '-v', action='store_true', help='Generate CFG visualization')
     analyze.add_argument('--strict', action='store_true', help='Fail on first error')
     
+    # QA Features (NEW!)
+    analyze.add_argument('--risk', action='store_true', help='Include risk assessment')
+    analyze.add_argument('--junit', type=str, metavar='FILE', help='Export JUnit XML for CI/CD')
+    
     # CI/CD Integration
     analyze.add_argument('--fail-on-quality', action='store_true', help='Fail if quality below threshold')
     analyze.add_argument('--min-quality', type=int, default=70, help='Minimum quality score (default: 70)')
@@ -271,6 +319,7 @@ def main():
     test.add_argument('file', help='SQL file path')
     test.add_argument('--format', '-f', choices=['tsqlt', 'ssdt'], default='tsqlt')
     test.add_argument('--output', '-o', help='Test output file')
+    test.add_argument('--enhanced', action='store_true', help='Generate tests with table mocks and test data')
     
     args = parser.parse_args()
     

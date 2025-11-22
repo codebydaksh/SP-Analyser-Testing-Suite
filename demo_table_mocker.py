@@ -26,37 +26,37 @@ def main():
         'tables': ['dbo.Users', 'dbo.Orders', 'dbo.OrderItems', '#TempResults', 'dbo.AuditLog']
     }
     
-    print("\n📊 Sample Stored Procedure Analysis:")
+    print("\n Sample Stored Procedure Analysis:")
     print(f"   Name: {sp_analysis['name']}")
     print(f"   Tables Referenced: {', '.join(sp_analysis['tables'])}")
     
     # Extract dependencies (filters out temp tables)
     dependencies = mocker.extract_table_dependencies(sp_analysis)
-    print(f"\n🎯 Real Tables to Mock: {dependencies}")
+    print(f"\n Real Tables to Mock: {dependencies}")
     print(f"   (Temp tables like #TempResults are excluded)")
     
     # Generate FakeTable calls
-    print("\n\n📝 Generated tSQLt.FakeTable Calls:")
+    print("\n\n Generated tSQLt.FakeTable Calls:")
     print("-" * 80)
     fake_calls = mocker.generate_fake_table_calls(dependencies)
     for call in fake_calls:
         print(call)
     
     # Generate fixture data
-    print("\n\n💾 Generated Fixture Data (Basic Scenario):")
+    print("\n\n Generated Fixture Data (Basic Scenario):")
     print("-" * 80)
     fixture_data = mocker.create_fixture_data(dependencies, 'basic')
     for stmt in fixture_data:
         print(stmt)
     
     # Generate complete setup/teardown
-    print("\n\n🔧 Complete Setup/TearDown Methods:")
+    print("\n\n Complete Setup/TearDown Methods:")
     print("-" * 80)
     setup_teardown = mocker.generate_setup_teardown('TestProcessOrder', dependencies, 'basic')
     print(setup_teardown)
     
     # Generate complete test with mocks
-    print("\n\n✅ Complete Test with Automatic Mocking:")
+    print("\n\n Complete Test with Automatic Mocking:")
     print("=" * 80)
     parameters = [
         {'name': '@UserId', 'type': 'INT'},
@@ -70,14 +70,14 @@ def main():
     print(complete_test)
     
     print("\n" + "="*80)
-    print("✅ Ready for Production Testing!")
+    print(" Ready for Production Testing!")
     print("="*80)
     print("\nBenefits:")
-    print("  ✓ Automatic table dependency detection")
-    print("  ✓ No manual FakeTable calls needed")
-    print("  ✓ Fixture data pre-populated")
-    print("  ✓ Clean setup/teardown structure")
-    print("  ✓ Tests run in isolation")
+    print("  - Automatic table dependency detection")
+    print("  - No manual FakeTable calls needed")
+    print("  - Fixture data pre-populated")
+    print("  - Clean setup/teardown structure")
+    print("  - Tests run in isolation")
 
 
 if __name__ == '__main__':
