@@ -1,12 +1,3 @@
--- ===========================================
--- WORLD-CLASS tSQLt Unit Tests for dbo.uspKaiser820ExtractHistory
--- Auto-generated with:
---   - Parameter validation
---   - tSQLt.AssertEquals real assertions
---   - NULL boundary testing
---   - Error handling with TRY/CATCH
--- ===========================================
-
 EXEC tSQLt.NewTestClass 'Testdbo_uspKaiser820ExtractHistory';
 GO
 
