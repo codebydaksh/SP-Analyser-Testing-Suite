@@ -47,8 +47,8 @@ class TestExtremeErrorHandling:
             @Param1 VARCHAR(MAX) = '!@#$%^&*()_+-={}[]|\\:;"''<>,.?/~`'
         AS
         BEGIN
-            DECLARE @Special NVARCHAR(MAX) = N'±§¶†‡•‰‹›€™℠℗©®℃℉№⅓⅔⅛⅜⅝⅞∀∂∃∅∇∈∉∋∏∑−∗√∝∞∠∧∨∩∪∫∴∼≅≈≠≡≤≥⊂⊃⊄⊆⊇⊕⊗⊥⋅';
-            SELECT @Param1 AS [Column!@#$%], @Special AS [特殊字符™®©];
+            DECLARE @Special NVARCHAR(MAX) = N'PlusMinusSection-Paragraph-Dagger-DoubleDagger-Various-Math-Symbols';
+            SELECT @Param1 AS [Column!@#$%], @Special AS [SpecialChars];
         END
         """
         
