@@ -1,4 +1,4 @@
-# 🎯 QA Features Integration Demo
+#  QA Features Integration Demo
 
 ## Complete Feature Demonstration
 
@@ -15,7 +15,7 @@ python sp_analyze.py analyze examples/usp_ProcessCustomerOrder.sql --risk
 ```
 
 **Output includes:**
-- ⚡ RISK ASSESSMENT section
+-  RISK ASSESSMENT section
 - Risk Level: LOW/MEDIUM/HIGH/CRITICAL
 - Risk Score: 0-100
 - Recommendation: Testing strategy based on risk
@@ -59,9 +59,9 @@ python sp_analyze.py analyze examples/usp_ProcessCustomerOrder.sql --junit resul
 ## Feature 3: Enhanced Test Generation (--enhanced)
 
 Generate tSQLt tests with:
-✅ Automatic table mocking (FakeTable)  
-✅ Comprehensive test data (valid, boundary, invalid, SQL injection)  
-✅ Multiple test scenarios
+ Automatic table mocking (FakeTable)  
+ Comprehensive test data (valid, boundary, invalid, SQL injection)  
+ Multiple test scenarios
 
 ### Basic Test Generation (without --enhanced)
 ```bash
@@ -89,10 +89,10 @@ python sp_analyze.py test examples/usp_ProcessCustomerOrder.sql --enhanced -o en
 | Feature | Basic | Enhanced |
 |---------|-------|----------|
 | Lines of code | ~30 | ~60 |
-| Table mocking | ❌ | ✅ Auto-generated |
+| Table mocking |  |  Auto-generated |
 | Test data | Simple | Comprehensive |
-| SQL injection tests | ❌ | ✅ |
-| Boundary value tests | ❌ | ✅ |
+| SQL injection tests |  |  |
+| Boundary value tests |  |  |
 
 ---
 
@@ -227,9 +227,9 @@ echo "\n=== Demo Complete! ==="
 
 ## Next Steps
 
-1. ✅ **Integrated**: All QA features working
-2. ✅ **Tested**: 111/112 tests passing
-3. ⏭️ **Optional**: HTML report risk section (cosmetic enhancement)
-4. ✅ **Ready**: Production deployment ready
+1.  **Integrated**: All QA features working
+2.  **Tested**: 111/112 tests passing
+3. ⏭ **Optional**: HTML report risk section (cosmetic enhancement)
+4.  **Ready**: Production deployment ready
 
-**The QA features are fully integrated and production-ready!** 🚀
+**The QA features are fully integrated and production-ready!** 

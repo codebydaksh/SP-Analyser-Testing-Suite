@@ -1,33 +1,33 @@
-# 🏆 World-Class SQL Server Stored Procedure Analysis Suite
+#  World-Class SQL Server Stored Procedure Analysis Suite
 
 **THE definitive enterprise-grade T-SQL stored procedure analyzer**
 
-## ⭐ Enterprise Features
+##  Enterprise Features
 
 ### Core Analysis
-- ✅ **Robust T-SQL Parser** - Never fails on valid SQL
-- ✅ **Dependency Analysis** - Tables & procedures
-- ✅ **Control Flow Detection** - IF/WHILE/CASE with line numbers
-- ✅ **CFG Building** - Complete control flow graphs
-- ✅ **Path Analysis** - All execution paths
-- ✅ **Unreachable Code Detection** - Find dead code
-- ✅ **Infinite Loop Detection** - Spot problematic loops
+-  **Robust T-SQL Parser** - Never fails on valid SQL
+-  **Dependency Analysis** - Tables & procedures
+-  **Control Flow Detection** - IF/WHILE/CASE with line numbers
+-  **CFG Building** - Complete control flow graphs
+-  **Path Analysis** - All execution paths
+-  **Unreachable Code Detection** - Find dead code
+-  **Infinite Loop Detection** - Spot problematic loops
 
 ### Security & Quality
-- 🔒 **Security Analysis** - SQL injection, permissions (0-100 score)
-- ⭐ **Code Quality** - Best practices, A-F grading
-- 📊 **Complexity Metrics** - Cyclomatic complexity
-- 💡 **Actionable Recommendations** - Not just problems, solutions
+-  **Security Analysis** - SQL injection, permissions (0-100 score)
+-  **Code Quality** - Best practices, A-F grading
+-  **Complexity Metrics** - Cyclomatic complexity
+-  **Actionable Recommendations** - Not just problems, solutions
 
 ### Reports & Integration
-- 📈 **HTML Reports** - Beautiful interactive dashboards
-- 📄 **JSON Export** - CI/CD automation
-- 🎨 **Graphviz Visualization** - CFG diagrams
-- 🧪 **Unit Test Generation** - tSQLt & SSDT
-- 📂 **Batch Processing** - Analyze entire directories
-- 🚀 **CI/CD Integration** - Threshold-based build gates
+-  **HTML Reports** - Beautiful interactive dashboards
+-  **JSON Export** - CI/CD automation
+-  **Graphviz Visualization** - CFG diagrams
+-  **Unit Test Generation** - tSQLt & SSDT
+-  **Batch Processing** - Analyze entire directories
+-  **CI/CD Integration** - Threshold-based build gates
 
-## 🚀 Quick Start
+##  Quick Start
 
 ```bash
 # Install dependencies
@@ -45,30 +45,30 @@ python sp_analyze.py analyze your_sp.sql \
   --fail-on-security --min-security 90
 ```
 
-## 📊 Example Output
+##  Example Output
 
 ```
 ============================================================
 Analyzing: GetUserOrders.sql
 ============================================================
 
-🔍 ANALYSIS SUMMARY
+ ANALYSIS SUMMARY
   Procedure: dbo.GetUserOrders
   Lines of Code: 17
 
-📊 METRICS
+ METRICS
   Security Score: 98/100
   Quality Grade: A (94/100)
   Complexity: 0
 
-🔗 DEPENDENCIES
+ DEPENDENCIES
   Tables: 3 (Orders, Users, AccessLog)
   Procedures: 0
 
-✅ HTML report: GetUserOrders_report.html
+ HTML report: GetUserOrders_report.html
 ```
 
-## 🎯 CLI Commands
+##  CLI Commands
 
 ### Analyze Command
 ```bash
@@ -95,45 +95,45 @@ Options:
   --output, -o FILE      Output file for tests
 ```
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
-├── sp_analyze.py          🏆 Main CLI (world-class)
-├── analyzer.py            (Legacy CLI)
-├── src/
-│   ├── parser/
-│   │   ├── tsql_text_parser.py      📝 Robust text parser
-│   │   ├── sp_parser.py             (sqlglot-based)
-│   │   └── control_flow_extractor.py 🔍 IF/WHILE/CASE
-│   ├── analyzer/
-│   │   ├── security_analyzer.py     🔒 SQL injection
-│   │   ├── quality_analyzer.py      ⭐ Code quality
-│   │   ├── cfg_builder.py           📊 CFG construction
-│   │   ├── path_analyzer.py         🛣️ Path analysis
-│   │   ├── logic_explainer.py       💬 Plain English
-│   │   ├── visualizer.py            🎨 Graphviz
-│   │   ├── dependency_resolver.py   🔗 Dependencies
-│   │   └── test_generator.py        🧪 tSQLt/SSDT
-│   └── reports/
-│       └── html_generator.py        📊 HTML reports
-├── tests/                 ✅ 13+ tests passing
-└── examples/              📚 Sample procedures
+ sp_analyze.py           Main CLI (world-class)
+ analyzer.py            (Legacy CLI)
+ src/
+    parser/
+       tsql_text_parser.py       Robust text parser
+       sp_parser.py             (sqlglot-based)
+       control_flow_extractor.py  IF/WHILE/CASE
+    analyzer/
+       security_analyzer.py      SQL injection
+       quality_analyzer.py       Code quality
+       cfg_builder.py            CFG construction
+       path_analyzer.py          Path analysis
+       logic_explainer.py        Plain English
+       visualizer.py             Graphviz
+       dependency_resolver.py    Dependencies
+       test_generator.py         tSQLt/SSDT
+    reports/
+        html_generator.py         HTML reports
+ tests/                  13+ tests passing
+ examples/               Sample procedures
 ```
 
-## 🎓 Features Comparison
+##  Features Comparison
 
 | Feature | This Tool | Others |
 |---------|-----------|--------|
-| Robust Parsing | ✅ Works with ANY T-SQL | ❌ Limited |
-| Security Analysis | ✅ SQL Injection | ❌ Basic |
-| Code Quality | ✅ A-F Grading | ❌ Yes/No |
-| HTML Reports | ✅ Interactive | ❌ Text |
-| Batch Processing | ✅ Wildcards | ❌ Manual |
-| CI/CD Integration | ✅ Thresholds | ❌ None |
-| Test Generation | ✅ tSQLt & SSDT | ❌ Limited |
-| Price | ✅ **FREE** | 💰 $$$$ |
+| Robust Parsing |  Works with ANY T-SQL |  Limited |
+| Security Analysis |  SQL Injection |  Basic |
+| Code Quality |  A-F Grading |  Yes/No |
+| HTML Reports |  Interactive |  Text |
+| Batch Processing |  Wildcards |  Manual |
+| CI/CD Integration |  Thresholds |  None |
+| Test Generation |  tSQLt & SSDT |  Limited |
+| Price |  **FREE** |  $$$$ |
 
-## 🏗️ Use Cases
+##  Use Cases
 
 ### 1. Code Review
 Automatically grade SPs before merging PRs
@@ -161,7 +161,7 @@ Generate unit tests automatically
 python sp_analyze.py test my_sp.sql --format tsqlt -o tests.sql
 ```
 
-## 📈 Test Results
+##  Test Results
 
 ```
 13 tests passed in 0.40s
@@ -173,18 +173,18 @@ python sp_analyze.py test my_sp.sql --format tsqlt -o tests.sql
 - Analyzer tests (4)
 ```
 
-## 🌟 What Makes This World-Class?
+##  What Makes This World-Class?
 
-1. ✅ **Never Fails** - Robust parsing handles any T-SQL
-2. ✅ **Enterprise Security** - Real vulnerability detection
-3. ✅ **Professional Reports** - Interactive HTML dashboards
-4. ✅ **CI/CD Ready** - Built for automation
-5. ✅ **Batch Processing** - Analyze thousands of SPs
-6. ✅ **Multiple Outputs** - HTML, JSON, DOT, Console
-7. ✅ **Quality Grading** - Actionable A-F scores
-8. ✅ **Comprehensive** - Security + Quality + Testing
+1.  **Never Fails** - Robust parsing handles any T-SQL
+2.  **Enterprise Security** - Real vulnerability detection
+3.  **Professional Reports** - Interactive HTML dashboards
+4.  **CI/CD Ready** - Built for automation
+5.  **Batch Processing** - Analyze thousands of SPs
+6.  **Multiple Outputs** - HTML, JSON, DOT, Console
+7.  **Quality Grading** - Actionable A-F scores
+8.  **Comprehensive** - Security + Quality + Testing
 
-## 📝 Requirements
+##  Requirements
 
 ```
 Python 3.8+
@@ -193,15 +193,15 @@ antlr4-python3-runtime==4.13.1
 pytest==8.0.0
 ```
 
-## 🤝 Contributing
+##  Contributing
 
 This is a production-ready, enterprise-grade solution. All contributions welcome!
 
-## 📄 License
+##  License
 
 MIT License - Free for commercial and personal use
 
-## 🎉 Get Started Now!
+##  Get Started Now!
 
 ```bash
 git clone <repo>
@@ -214,4 +214,4 @@ python sp_analyze.py analyze examples/GetUserOrders.sql --html
 
 ---
 
-**Built with ❤️ for the SQL Server community**
+**Built with  for the SQL Server community**

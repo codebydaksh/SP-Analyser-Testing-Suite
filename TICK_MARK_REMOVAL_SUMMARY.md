@@ -2,7 +2,7 @@
 
 ## Changes Made
 
-Removed all tick mark symbols (✓) from the project and replaced them with hyphens (-) for consistency.
+Removed all tick mark symbols () from the project and replaced them with hyphens (-) for consistency.
 
 ### Files Modified
 
@@ -24,10 +24,10 @@ Removed all tick mark symbols (✓) from the project and replaced them with hyph
 **Before:**
 ```sql
 -- Auto-generated with:
---   ✓ Parameter validation
---   ✓ tSQLt.AssertEquals real assertions
---   ✓ NULL boundary testing
---   ✓ Error handling with TRY/CATCH
+--    Parameter validation
+--    tSQLt.AssertEquals real assertions
+--    NULL boundary testing
+--    Error handling with TRY/CATCH
 ```
 
 **After:**
@@ -42,7 +42,7 @@ Removed all tick mark symbols (✓) from the project and replaced them with hyph
 ### Python Print Statements
 **Before:**
 ```python
-print("  ✓ Boundary value analysis (MIN/MAX)")
+print("   Boundary value analysis (MIN/MAX)")
 ```
 
 **After:**
@@ -53,7 +53,7 @@ print("  - Boundary value analysis (MIN/MAX)")
 ### CLI Output
 **Before:**
 ```
-Enhanced features: ✓ Table mocking ✓ Comprehensive test data
+Enhanced features:  Table mocking  Comprehensive test data
 ```
 
 **After:**
@@ -63,6 +63,6 @@ Enhanced features: - Table mocking - Comprehensive test data
 
 ## Note
 
-✅ checkmark symbols (green checkmarks) were intentionally kept as they are used for positive status messages like "Tests saved" and are standard for success indicators in console output.
+ checkmark symbols (green checkmarks) were intentionally kept as they are used for positive status messages like "Tests saved" and are standard for success indicators in console output.
 
-✓ tick marks have been completely removed from the codebase.
+ tick marks have been completely removed from the codebase.

@@ -1,4 +1,4 @@
-# 🚀 DEMO SCRIPT - World-Class SQL SP Analysis Suite
+#  DEMO SCRIPT - World-Class SQL SP Analysis Suite
 
 ## Quick Start Demo
 
@@ -10,11 +10,11 @@ cd "D:\Stored Procedure Analysis & Testing Suite"
 python sp_analyze.py analyze examples/usp_ProcessCustomerOrder.sql --html --markdown
 
 # Expected Results:
-# ✅ Security Score: 100/100  
-# ✅ Quality Grade: A (98/100)
-# ✅ Performance Score: 98/100
-# ✅ Complexity: 8
-# ✅ Procedures Called: 5 (usp_ProcessPayment, usp_SendOrderNotification, etc.)
+#  Security Score: 100/100  
+#  Quality Grade: A (98/100)
+#  Performance Score: 98/100
+#  Complexity: 8
+#  Procedures Called: 5 (usp_ProcessPayment, usp_SendOrderNotification, etc.)
 ```
 
 ## Batch Analysis Demo
@@ -61,10 +61,10 @@ python sp_analyze.py analyze examples/usp_ProcessPayment.sql
 ```
 
 **Detects:**
-- ✅ SQL Injection risks (none in demo)
-- ✅ Permission issues (none in demo)
-- ✅ TRY-CATCH presence (yes)
-- ✅ Transaction handling (yes)
+-  SQL Injection risks (none in demo)
+-  Permission issues (none in demo)
+-  TRY-CATCH presence (yes)
+-  Transaction handling (yes)
 
 ### 2. Code Quality
 ```bash
@@ -73,11 +73,11 @@ python sp_analyze.py analyze examples/usp_UpdateCustomerStats.sql
 ```
 
 **Checks:**
-- ✅ SET NOCOUNT ON (present)
-- ✅ Schema qualification (all tables)
-- ✅ Naming conventions (usp_ prefix)
-- ✅ No SELECT * (explicit columns)
-- ✅ Proper error handling (comprehensive)
+-  SET NOCOUNT ON (present)
+-  Schema qualification (all tables)
+-  Naming conventions (usp_ prefix)
+-  No SELECT * (explicit columns)
+-  Proper error handling (comprehensive)
 
 ### 3. Performance Analysis
 ```bash
@@ -86,10 +86,10 @@ python sp_analyze.py analyze examples/usp_RecordAccountingEntry.sql
 ```
 
 **Detects:**
-- ✅ No cursors
-- ✅ No implicit conversions
-- ✅ No functions in WHERE clause
-- ✅ Proper indexing hints (NOLOCK where appropriate)
+-  No cursors
+-  No implicit conversions
+-  No functions in WHERE clause
+-  Proper indexing hints (NOLOCK where appropriate)
 
 ### 4. Dependency Detection
 ```bash
@@ -213,4 +213,4 @@ Ready for production.
 Ready for your team.
 Ready NOW."
 
-🚀
+

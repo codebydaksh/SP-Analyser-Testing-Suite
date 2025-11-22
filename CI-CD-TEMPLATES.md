@@ -104,7 +104,7 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.name,
-            body: '## 📊 SP Analysis Results\n\n```\n' + summary + '\n```'
+            body: '##  SP Analysis Results\n\n```\n' + summary + '\n```'
           });
 ```
 
@@ -151,8 +151,8 @@ Adjust thresholds based on your needs:
 
 ## Benefits
 
-✅ Automated quality gates
-✅ Prevents low-quality code merges
-✅ Security vulnerability blocking
-✅ Trend tracking via artifacts
-✅ PR comments with results
+ Automated quality gates
+ Prevents low-quality code merges
+ Security vulnerability blocking
+ Trend tracking via artifacts
+ PR comments with results
