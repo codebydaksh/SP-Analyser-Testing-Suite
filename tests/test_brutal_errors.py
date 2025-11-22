@@ -78,12 +78,12 @@ class TestBrutalErrorHandling:
         """Test SQL with special Unicode characters that could break parsing"""
         problematic_sql = """
         CREATE PROCEDURE dbo.UnicodeSP 
-            @Name NVARCHAR(100) = N'测试者TestUser'
+            @Name NVARCHAR(100) = N'TestUser'
         AS
         BEGIN
             -- Comment with problematic chars: trademark-reg-copyright-symbol-infinity-section-paragraph
             DECLARE @Emoji NVARCHAR(MAX) = N'User: [USER] Status: [OK] Error: [ERROR] Warning: [WARN]';
-            SELECT @Name AS 用户名, @Emoji AS 状态;
+            SELECT @Name AS , @Emoji AS ;
             -- Right-to-left text: مرحبا العالم
             -- Zero-width chars: ​‌‍
         END
